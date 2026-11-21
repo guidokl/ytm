@@ -14,6 +14,11 @@
   --faint: #5d584f;
   --rule: #2b2925;
   --accent: #e1602d;
+  /* banner fades: page colour on the text side, image showing through on the right */
+  --fade-x: linear-gradient(90deg, rgba(18,17,16,1) 30%, rgba(18,17,16,.62) 62%, rgba(18,17,16,.22));
+  /* geometric lines behind the playlist blocks (a shade lighter than the page), playlist dividers above them */
+  --line: #262019;
+  --divider: #3a352d;
   --serif: "Iowan Old Style", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
 }
@@ -40,12 +45,21 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .masthead h1 em { font-style: italic; color: var(--accent); }
 .masthead p { margin: 14px 0 0; max-width: 32rem; color: var(--dim); font-style: italic; }
 
-/* index of families */
-nav ol { list-style: none; margin: 0; padding: 14px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px;
+/* index of families: cards, numbered down the left column first, then the right */
+nav ol { list-style: none; margin: 0; padding: 18px 0; display: grid; gap: 8px 12px;
+  grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(4, auto);
   border-bottom: 1px solid var(--rule); }
-nav a { display: flex; gap: 10px; padding: 7px 0; text-decoration: none; color: var(--paper); }
-nav a span { color: var(--accent); }
-nav a:hover { color: var(--accent); }
+.card-in { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px;
+  border: 1px solid var(--rule); text-decoration: none; color: var(--paper);
+  background: var(--fade-x), var(--img, none) right center / cover no-repeat, var(--ink);
+  transition: border-color .2s ease; }
+.card-in .no { color: var(--accent); }
+.card-in .name { flex: 1; }
+.card-in .n { color: var(--faint); }
+a.card-in:hover, a.card-in:focus-visible { border-color: var(--faint); }
+a.card-in:hover .name { color: var(--accent); }
+.card.soon .card-in { color: var(--faint); border-style: dashed; background: none; }
+.card.soon .no { color: var(--faint); }
 
 /* tools */
 .tools { padding: 16px 0 18px; border-bottom: 1px solid var(--paper); }
@@ -68,7 +82,28 @@ nav a:hover { color: var(--accent); }
 
 /* families */
 .family { padding-top: 34px; }
-.fam-head { display: flex; align-items: baseline; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--paper); }
+.fam-head { display: flex; align-items: baseline; gap: 12px; padding: 44px 14px 12px;
+  border: 1px solid var(--rule); border-bottom-color: var(--paper);
+  background: var(--fade-x), var(--img, none) right center / cover no-repeat, var(--ink); }
+
+/* count + Info sit on the bright end of the banner: lift them off it */
+.fam-head .fam-count, .fam-head .info, .card-in .n { color: var(--paper);
+  text-shadow: 0 0 3px #000, 0 0 10px #000, 0 0 18px rgba(0,0,0,.8); }
+.card.soon .card-in .n { color: var(--faint); text-shadow: none; }
+
+/* playlist blocks: a faint line pattern, different per family (mask, so --line sets the colour) */
+.rows { position: relative; isolation: isolate; }
+.rows::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--line);
+  -webkit-mask: var(--pat) repeat; mask: var(--pat) repeat; }
+.rows .row { padding: 0 14px; }
+.pat-1 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' fill='none' stroke='%23000'%3E%3Ccircle cx='90' cy='90' r='30'/%3E%3Ccircle cx='90' cy='90' r='60'/%3E%3Ccircle cx='90' cy='90' r='90'/%3E%3C/svg%3E"); }
+.pat-2 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' fill='none' stroke='%23000'%3E%3Cpath d='M0 34L46 12L80 70L140 44M0 104L56 126L96 92L140 114M30 0L24 140'/%3E%3C/svg%3E"); }
+.pat-3 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='24' fill='none' stroke='%23000'%3E%3Cpath d='M0 12.5H22M30 12.5H40M46 12.5H51M55 12.5H57'/%3E%3C/svg%3E"); }
+.pat-4 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='30' fill='none' stroke='%23000'%3E%3Cpath d='M0 15Q20 3 40 15T80 15'/%3E%3C/svg%3E"); }
+.pat-5 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='none' stroke='%23000'%3E%3Cpath d='M0 .5H28M.5 0V28'/%3E%3C/svg%3E"); }
+.pat-6 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='none' stroke='%23000'%3E%3Cpath d='M0 22L22 0M-6 6L6 -6M16 28L28 16'/%3E%3C/svg%3E"); }
+.pat-7 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='20' fill='none' stroke='%23000'%3E%3Cpath d='M0 15L9 5L18 15L27 5L36 15'/%3E%3C/svg%3E"); }
+.pat-8 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' fill='none' stroke='%23000'%3E%3Cpath d='M22 0L44 22L22 44L0 22Z'/%3E%3C/svg%3E"); }
 .fam-no { color: var(--accent); }
 .fam-head h2 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; letter-spacing: -.005em; flex: 1; }
 .fam-count { color: var(--faint); }
@@ -81,7 +116,7 @@ nav a:hover { color: var(--accent); }
 
 /* rows */
 .rows { list-style: none; margin: 0; padding: 0; }
-.row { border-bottom: 1px solid var(--rule); }
+.row { border-bottom: 1px solid var(--divider); }
 .row-head { display: grid; grid-template-columns: 84px 1fr 44px; gap: 0 16px; padding: 18px 0 14px; }
 .thumb { display: block; width: 100%; aspect-ratio: 1; align-self: start; margin-top: 4px;
   background: var(--rule); outline: 1px solid rgba(232, 226, 212, .08); outline-offset: -1px; }
@@ -115,17 +150,40 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
 :focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
 
+/* floating back-to-top */
+.top { position: fixed; right: 18px; bottom: 18px; z-index: 10; width: 46px; height: 46px;
+  display: grid; place-items: center; border: 1px solid var(--faint); background: rgba(18,17,16,.88);
+  color: var(--paper); opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease, border-color .2s ease; }
+.top.show { opacity: 1; transform: none; pointer-events: auto; }
+.top:hover, .top:focus-visible { border-color: var(--accent); color: var(--accent); }
+.top svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+
+/* desktop: wider page, playlists of a family in two columns */
+@media (min-width: 1100px) {
+  .wrap { max-width: 74rem; padding: 0 32px; }
+  .masthead p { max-width: 40rem; }
+  nav ol { gap: 10px 16px; }
+  .card-in { min-height: 72px; font-size: 18px; }
+  /* cells of one grid row stretch to the same height, so the dividers line up */
+  .rows { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
+  .fam-head { padding-top: 60px; }
+  .fam-head h2 { font-size: 30px; }
+}
 @media (max-width: 520px) {
   body { font-size: 16px; }
   .row-head { grid-template-columns: 64px 1fr 36px; gap: 0 12px; }
   .fold { width: 36px; margin-right: -6px; }
   .bg { padding-left: 0; }
+  .fam-head { padding-top: 36px; }
   .fam-head h2 { font-size: 23px; }
-  nav ol { grid-template-columns: 1fr; }
+  .rows .row { padding: 0 10px; }
+  nav ol { grid-template-columns: 1fr; grid-auto-flow: row; grid-template-rows: none; gap: 6px; }
+  .card-in { min-height: 52px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .unfold, .fold svg { transition: none; }
+  .unfold, .fold svg, .top { transition: none; }
 }
 </style>
 </head>
@@ -138,7 +196,7 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
     <p>Notes and listening routes across genres, eras and the experimental edges. Each title opens in YouTube Music.</p>
   </header>
 
-  <nav aria-label="Families"><ol><li><a href="#ambient-drone"><span>01</span>Ambient &amp; Drone</a></li><li><a href="#experimental-sound-design"><span>02</span>Experimental &amp; Sound Design</a></li><li><a href="#dub-techno-dub"><span>03</span>Dub Techno &amp; Dub</a></li><li><a href="#organic-roots"><span>04</span>Organic &amp; Roots</a></li><li><a href="#idm-electronica"><span>05</span>IDM &amp; Electronica</a></li><li><a href="#techno"><span>06</span>Techno</a></li><li><a href="#drum-bass"><span>07</span>Drum &amp; Bass</a></li></ol></nav>
+  <nav aria-label="Families"><ol><li class="card"><a class="card-in" href="#ambient-drone" style="--img:url(thumbs/fam-ambient.jpg)"><span class="no">01</span><span class="name">Ambient &amp; Drone</span><span class="n">6</span></a></li><li class="card"><a class="card-in" href="#experimental-sound-design" style="--img:url(thumbs/fam-experimental.jpg)"><span class="no">02</span><span class="name">Experimental &amp; Sound Design</span><span class="n">3</span></a></li><li class="card"><a class="card-in" href="#dub-techno-dub" style="--img:url(thumbs/fam-dub.jpg)"><span class="no">03</span><span class="name">Dub Techno &amp; Dub</span><span class="n">8</span></a></li><li class="card"><a class="card-in" href="#organic-roots" style="--img:url(thumbs/fam-organic.jpg)"><span class="no">04</span><span class="name">Organic &amp; Roots</span><span class="n">3</span></a></li><li class="card"><a class="card-in" href="#idm-electronica" style="--img:url(thumbs/fam-idm.jpg)"><span class="no">05</span><span class="name">IDM &amp; Electronica</span><span class="n">5</span></a></li><li class="card"><a class="card-in" href="#techno" style="--img:url(thumbs/fam-techno.jpg)"><span class="no">06</span><span class="name">Techno</span><span class="n">5</span></a></li><li class="card"><a class="card-in" href="#drum-bass" style="--img:url(thumbs/fam-dnb.jpg)"><span class="no">07</span><span class="name">Drum &amp; Bass</span><span class="n">4</span></a></li><li class="card soon"><span class="card-in"><span class="no">08</span><span class="name">Trance &amp; Goa</span><span class="n">soon</span></span></li></ol></nav>
 
   <div class="tools">
     <div class="search-line">
@@ -152,8 +210,8 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
   </div>
 
   <main id="list">
-<section class="family" id="ambient-drone">
-  <header class="fam-head">
+<section class="family pat-1" id="ambient-drone">
+  <header class="fam-head" style="--img:url(thumbs/fam-ambient.jpg)">
     <span class="fam-no">01</span>
     <h2>Ambient &amp; Drone</h2>
     <span class="fam-count">6</span>
@@ -259,8 +317,8 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 </li>
   </ol>
 </section>
-<section class="family" id="experimental-sound-design">
-  <header class="fam-head">
+<section class="family pat-2" id="experimental-sound-design">
+  <header class="fam-head" style="--img:url(thumbs/fam-experimental.jpg)">
     <span class="fam-no">02</span>
     <h2>Experimental &amp; Sound Design</h2>
     <span class="fam-count">3</span>
@@ -318,8 +376,8 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 </li>
   </ol>
 </section>
-<section class="family" id="dub-techno-dub">
-  <header class="fam-head">
+<section class="family pat-3" id="dub-techno-dub">
+  <header class="fam-head" style="--img:url(thumbs/fam-dub.jpg)">
     <span class="fam-no">03</span>
     <h2>Dub Techno &amp; Dub</h2>
     <span class="fam-count">8</span>
@@ -457,8 +515,8 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 </li>
   </ol>
 </section>
-<section class="family" id="organic-roots">
-  <header class="fam-head">
+<section class="family pat-4" id="organic-roots">
+  <header class="fam-head" style="--img:url(thumbs/fam-organic.jpg)">
     <span class="fam-no">04</span>
     <h2>Organic &amp; Roots</h2>
     <span class="fam-count">3</span>
@@ -516,8 +574,8 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 </li>
   </ol>
 </section>
-<section class="family" id="idm-electronica">
-  <header class="fam-head">
+<section class="family pat-5" id="idm-electronica">
+  <header class="fam-head" style="--img:url(thumbs/fam-idm.jpg)">
     <span class="fam-no">05</span>
     <h2>IDM &amp; Electronica</h2>
     <span class="fam-count">5</span>
@@ -607,8 +665,8 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 </li>
   </ol>
 </section>
-<section class="family" id="techno">
-  <header class="fam-head">
+<section class="family pat-6" id="techno">
+  <header class="fam-head" style="--img:url(thumbs/fam-techno.jpg)">
     <span class="fam-no">06</span>
     <h2>Techno</h2>
     <span class="fam-count">5</span>
@@ -698,8 +756,8 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 </li>
   </ol>
 </section>
-<section class="family" id="drum-bass">
-  <header class="fam-head">
+<section class="family pat-7" id="drum-bass">
+  <header class="fam-head" style="--img:url(thumbs/fam-dnb.jpg)">
     <span class="fam-no">07</span>
     <h2>Drum &amp; Bass</h2>
     <span class="fam-count">4</span>
@@ -778,6 +836,9 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 
   <footer><span>Compiled by Voidceptions</span><span>Opens in YouTube Music</span></footer>
 </div>
+<button class="top" id="top" type="button" aria-label="Back to top">
+  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 10l5-5 5 5"/></svg>
+</button>
 <script>
 (() => {
   const NEW_DAYS = 14;
@@ -836,6 +897,12 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
     chips.forEach(c => c.setAttribute("aria-pressed", "false"));
     apply();
   });
+  const top = document.getElementById("top");
+  const onScroll = () => top.classList.toggle("show", scrollY > 600);
+  addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+  top.addEventListener("click", () => scrollTo({ top: 0 }));  // smooth via html { scroll-behavior }
+
   document.getElementById("random").addEventListener("click", () => {
     const pool = rows.filter(r => !r.hidden);
     if (!pool.length) return;

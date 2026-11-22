@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#121110">
+<title>Voidceptions · Playlist Catalogue</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root {
+  --ink: #121110;
+  --paper: #e8e2d4;
+  --dim: #9a9384;
+  --faint: #5d584f;
+  --rule: #2b2925;
+  --accent: #e1602d;
+  /* banner fades: page colour on the text side, image showing through on the right */
+  --fade-x: linear-gradient(90deg, rgba(18,17,16,1) 30%, rgba(18,17,16,.62) 62%, rgba(18,17,16,.22));
+  /* geometric lines behind the playlist blocks (a shade lighter than the page) */
+  --line: #262019;
+  --serif: "Iowan Old Style", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--ink); color: var(--paper);
+  font: 17px/1.5 var(--serif); font-feature-settings: "onum", "kern";
+}
+a { color: inherit; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.wrap { max-width: 46rem; margin: 0 auto; padding: 0 16px; }
+.label, .meta, .tags, .catno, .fam-no, .fam-count, .info, .chip, .random, .status, .masthead small, nav, footer {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+}
+
+/* masthead */
+.masthead { padding: 40px 0 20px; border-bottom: 1px solid var(--paper); }
+.masthead small { display: flex; justify-content: space-between; gap: 12px; color: var(--dim); }
+.masthead h1 {
+  margin: 28px 0 6px; font-weight: 400; font-size: clamp(40px, 11vw, 68px); line-height: .95;
+  letter-spacing: -.02em;
+}
+.masthead h1 em { font-style: italic; color: var(--accent); }
+.masthead p { margin: 14px 0 0; max-width: 32rem; color: var(--dim); font-style: italic; }
+
+/* index of families: cards, numbered down the left column first, then the right */
+nav ol { list-style: none; margin: 0; padding: 18px 0; display: grid; gap: 8px 12px;
+  grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(4, auto);
+  border-bottom: 1px solid var(--rule); }
+.card-in { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px;
+  border: 1px solid var(--rule); text-decoration: none; color: var(--paper);
+  background: var(--fade-x), var(--img, none) right center / cover no-repeat, var(--ink);
+  transition: border-color .2s ease; }
+.card-in .no { color: var(--accent); }
+.card-in .name { flex: 1; }
+.card-in .n { color: var(--faint); }
+a.card-in:hover, a.card-in:focus-visible { border-color: var(--faint); }
+a.card-in:hover .name { color: var(--accent); }
+.card.soon .card-in { color: var(--faint); border-style: dashed; background: none; }
+.card.soon .no { color: var(--faint); }
+
+/* tools */
+.tools { padding: 16px 0 18px; border-bottom: 1px solid var(--paper); }
+.search-line { display: flex; gap: 14px; align-items: end; }
+.search-line label { flex: 1; display: block; }
+.search-line input {
+  width: 100%; margin-top: 4px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--faint);
+  background: transparent; color: var(--paper); font: 19px var(--serif); border-radius: 0; outline: none;
+}
+.search-line input:focus { border-bottom-color: var(--accent); }
+.search-line input::placeholder { color: var(--faint); font-style: italic; }
+.random { padding: 9px 12px; border: 1px solid var(--paper); min-height: 40px; }
+.random:hover, .random:focus-visible { background: var(--paper); color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.chip { padding: 7px 9px; border: 1px solid var(--rule); color: var(--dim); min-height: 34px; }
+.chip:hover { border-color: var(--dim); color: var(--paper); }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); background: var(--accent); }
+.status { display: flex; justify-content: space-between; margin-top: 12px; color: var(--faint); }
+.status button { color: var(--dim); text-decoration: underline; text-underline-offset: 3px; }
+
+/* families */
+.family { padding-top: 34px; }
+.fam-head { display: flex; align-items: baseline; gap: 12px; padding: 44px 14px 12px;
+  border: 1px solid var(--rule); border-bottom-color: var(--paper);
+  background: var(--fade-x), var(--img, none) right center / cover no-repeat, var(--ink); }
+
+/* count + Info sit on the bright end of the banner: lift them off it */
+.fam-head .fam-count, .fam-head .info, .card-in .n { color: var(--paper);
+  text-shadow: 0 0 3px #000, 0 0 10px #000, 0 0 18px rgba(0,0,0,.8); }
+.card.soon .card-in .n { color: var(--faint); text-shadow: none; }
+
+/* playlist blocks: a faint line pattern, different per family (mask, so --line sets the colour) */
+.rows { position: relative; isolation: isolate; }
+.rows::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--line);
+  -webkit-mask: var(--pat) repeat; mask: var(--pat) repeat; }
+.rows .row { padding: 0 14px; }
+.pat-1 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' fill='none' stroke='%23000'%3E%3Ccircle cx='90' cy='90' r='30'/%3E%3Ccircle cx='90' cy='90' r='60'/%3E%3Ccircle cx='90' cy='90' r='90'/%3E%3C/svg%3E"); }
+.pat-2 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' fill='none' stroke='%23000'%3E%3Cpath d='M0 34L46 12L80 70L140 44M0 104L56 126L96 92L140 114M30 0L24 140'/%3E%3C/svg%3E"); }
+.pat-3 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='24' fill='none' stroke='%23000'%3E%3Cpath d='M0 12.5H22M30 12.5H40M46 12.5H51M55 12.5H57'/%3E%3C/svg%3E"); }
+.pat-4 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='30' fill='none' stroke='%23000'%3E%3Cpath d='M0 15Q20 3 40 15T80 15'/%3E%3C/svg%3E"); }
+.pat-5 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='none' stroke='%23000'%3E%3Cpath d='M0 .5H28M.5 0V28'/%3E%3C/svg%3E"); }
+.pat-6 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='none' stroke='%23000'%3E%3Cpath d='M0 22L22 0M-6 6L6 -6M16 28L28 16'/%3E%3C/svg%3E"); }
+.pat-7 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='20' fill='none' stroke='%23000'%3E%3Cpath d='M0 15L9 5L18 15L27 5L36 15'/%3E%3C/svg%3E"); }
+.pat-8 { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' fill='none' stroke='%23000'%3E%3Cpath d='M22 0L44 22L22 44L0 22Z'/%3E%3C/svg%3E"); }
+.fam-no { color: var(--accent); }
+.fam-head h2 { margin: 0; font-weight: 400; font-size: 26px; line-height: 1.15; letter-spacing: -.005em; flex: 1; }
+.fam-count { color: var(--faint); }
+.info { color: var(--dim); padding: 8px 0 8px 10px; margin: -8px 0; }
+.info::after { content: " +"; color: var(--accent); }
+.info[aria-expanded="true"]::after { content: " \2212"; }
+.info:hover { color: var(--paper); }
+.fam-info { margin: 0; padding: 16px 0 18px 16px; border-left: 1px solid var(--accent); margin-top: 14px;
+  line-height: 1.7; color: var(--paper); max-width: 36rem; }
+
+/* rows */
+.rows { list-style: none; margin: 0; padding: 0; }
+.row-head { display: grid; grid-template-columns: 84px 1fr 44px; gap: 0 16px; padding: 18px 0 14px; }
+.thumb { display: block; width: 100%; aspect-ratio: 1; align-self: start; margin-top: 4px;
+  background: var(--rule); outline: 1px solid rgba(232, 226, 212, .08); outline-offset: -1px; }
+.thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.catno { display: block; color: var(--faint); margin-bottom: 2px; }
+.title { margin: 0; font-weight: 400; font-size: 21px; line-height: 1.25; }
+.title a { text-decoration: none; background-image: linear-gradient(var(--faint), var(--faint));
+  background-size: 100% 1px; background-repeat: no-repeat; background-position: 0 100%; }
+.title a:hover, .title a:focus-visible { color: var(--accent); background-image: linear-gradient(var(--accent), var(--accent)); outline: none; }
+.title a:visited { color: #d6cfbf; }
+.new { font: 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
+  margin-left: 10px; vertical-align: 3px; }
+.desc { margin: 6px 0 0; color: var(--dim); font-size: 16px; line-height: 1.45; }
+.meta { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 4px 18px; color: var(--paper); }
+.tags { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--faint); }
+.fold { width: 44px; height: 44px; display: grid; place-items: center; color: var(--dim); align-self: start; }
+.fold svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; transition: transform .25s ease; }
+.fold:hover { color: var(--paper); }
+.fold[aria-expanded="true"] { color: var(--accent); }
+.fold[aria-expanded="true"] svg { transform: rotate(180deg); }
+.bg { margin: 0 0 20px; padding: 0 0 0 calc(84px + 16px); line-height: 1.72; max-width: 40rem; }
+
+/* the unfold: grid rows 0fr -> 1fr animates to the natural height */
+.unfold { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+.unfold > div { overflow: hidden; }
+.unfold.open { grid-template-rows: 1fr; }
+
+[hidden] { display: none !important; }
+.empty { padding: 40px 0; color: var(--dim); font-style: italic; }
+footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--paper); color: var(--faint);
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+
+/* floating back-to-top */
+.top { position: fixed; right: 18px; bottom: 18px; z-index: 10; width: 46px; height: 46px;
+  display: grid; place-items: center; border: 1px solid var(--faint); background: rgba(18,17,16,.88);
+  color: var(--paper); opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease, border-color .2s ease; }
+.top.show { opacity: 1; transform: none; pointer-events: auto; }
+.top:hover, .top:focus-visible { border-color: var(--accent); color: var(--accent); }
+.top svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+
+/* desktop: wider page, playlists of a family in two columns */
+@media (min-width: 1100px) {
+  .wrap { max-width: 74rem; padding: 0 32px; }
+  .masthead p { max-width: 40rem; }
+  nav ol { gap: 10px 16px; }
+  .card-in { min-height: 72px; font-size: 18px; }
+  /* cells of one grid row stretch to the same height, so the rows line up */
+  .rows { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
+  .fam-head { padding-top: 60px; }
+  .fam-head h2 { font-size: 30px; }
+}
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .row-head { grid-template-columns: 64px 1fr 36px; gap: 0 12px; }
+  .fold { width: 36px; margin-right: -6px; }
+  .bg { padding-left: 0; }
+  .fam-head { padding-top: 36px; }
+  .fam-head h2 { font-size: 23px; }
+  .rows .row { padding: 0 10px; }
+  nav ol { grid-template-columns: 1fr; grid-auto-flow: row; grid-template-rows: none; gap: 6px; }
+  .card-in { min-height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .unfold, .fold svg, .top { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <small><span>Voidceptions</span><span>Cat. 2026-11-22</span></small>
+    <h1>Playlist <em>catalogue</em></h1>
+    <small><span>42 playlists · 7 families</span></small>
+    <p>Notes and listening routes across genres, eras and the experimental edges. Each title opens in YouTube Music.</p>
+  </header>
+
+  <nav aria-label="Families"><ol><li class="card"><a class="card-in" href="#ambient-drone" style="--img:url(thumbs/fam-ambient.jpg)"><span class="no">01</span><span class="name">Ambient &amp; Drone</span><span class="n">6</span></a></li><li class="card"><a class="card-in" href="#experimental-sound-design" style="--img:url(thumbs/fam-experimental.jpg)"><span class="no">02</span><span class="name">Experimental &amp; Sound Design</span><span class="n">5</span></a></li><li class="card"><a class="card-in" href="#dub-techno-dub" style="--img:url(thumbs/fam-dub.jpg)"><span class="no">03</span><span class="name">Dub Techno &amp; Dub</span><span class="n">8</span></a></li><li class="card"><a class="card-in" href="#organic-roots" style="--img:url(thumbs/fam-organic.jpg)"><span class="no">04</span><span class="name">Organic &amp; Roots</span><span class="n">3</span></a></li><li class="card"><a class="card-in" href="#idm-electronica" style="--img:url(thumbs/fam-idm.jpg)"><span class="no">05</span><span class="name">IDM &amp; Electronica</span><span class="n">5</span></a></li><li class="card"><a class="card-in" href="#techno" style="--img:url(thumbs/fam-techno.jpg)"><span class="no">06</span><span class="name">Techno</span><span class="n">11</span></a></li><li class="card"><a class="card-in" href="#drum-bass" style="--img:url(thumbs/fam-dnb.jpg)"><span class="no">07</span><span class="name">Drum &amp; Bass</span><span class="n">4</span></a></li><li class="card soon"><span class="card-in"><span class="no">08</span><span class="name">Trance &amp; Goa</span><span class="n">soon</span></span></li></ol></nav>
+
+  <div class="tools">
+    <div class="search-line">
+      <label><span class="label">Search</span>
+        <input id="q" type="search" placeholder="title, tag, artist, idea" autocomplete="off" spellcheck="false">
+      </label>
+      <button class="random" id="random" type="button">Random</button>
+    </div>
+    <div class="chips" role="group" aria-label="Filter by tag"><button type="button" class="chip" aria-pressed="false" data-tag="beatless">beatless</button><button type="button" class="chip" aria-pressed="false" data-tag="calm">calm</button><button type="button" class="chip" aria-pressed="false" data-tag="cold">cold</button><button type="button" class="chip" aria-pressed="false" data-tag="dancefloor">dancefloor</button><button type="button" class="chip" aria-pressed="false" data-tag="dark">dark</button><button type="button" class="chip" aria-pressed="false" data-tag="deep listening">deep listening</button><button type="button" class="chip" aria-pressed="false" data-tag="experimental">experimental</button><button type="button" class="chip" aria-pressed="false" data-tag="favourites">favourites</button><button type="button" class="chip" aria-pressed="false" data-tag="field recordings">field recordings</button><button type="button" class="chip" aria-pressed="false" data-tag="glitch">glitch</button><button type="button" class="chip" aria-pressed="false" data-tag="global">global</button><button type="button" class="chip" aria-pressed="false" data-tag="history">history</button><button type="button" class="chip" aria-pressed="false" data-tag="hypnotic">hypnotic</button><button type="button" class="chip" aria-pressed="false" data-tag="long tracks">long tracks</button><button type="button" class="chip" aria-pressed="false" data-tag="melodic">melodic</button><button type="button" class="chip" aria-pressed="false" data-tag="organic">organic</button><button type="button" class="chip" aria-pressed="false" data-tag="rhythm">rhythm</button><button type="button" class="chip" aria-pressed="false" data-tag="texture">texture</button><button type="button" class="chip" aria-pressed="false" data-tag="vocals">vocals</button><button type="button" class="chip" aria-pressed="false" data-tag="warm">warm</button></div>
+    <div class="status"><span id="count" aria-live="polite">42 of 42</span><button id="reset" type="button" hidden>Clear filters</button></div>
+  </div>
+
+  <main id="list">
+<section class="family pat-1" id="ambient-drone">
+  <header class="fam-head" style="--img:url(thumbs/fam-ambient.jpg)">
+    <span class="fam-no">01</span>
+    <h2>Ambient &amp; Drone</h2>
+    <span class="fam-count">6</span>
+    <button class="info" type="button" aria-expanded="false" aria-controls="ambient-drone-info">Info</button>
+  </header>
+  <div class="unfold" id="ambient-drone-info"><div><p class="fam-info">Brian Eno gave the idea its name in 1978 with Music for Airports: music that can be ignored as easily as it can be listened to. Since then ambient has split into many rooms. Some are warm and slow-pulsing, some cold and beatless, some are built from a single sustained tone that changes so slowly you only notice it in hindsight. Drone takes that last idea to its end point: duration, overtones and the space between the speakers become the actual material. What connects all of it is a shift in attention, away from melody and event, towards texture, atmosphere and time itself.</p></div></div>
+  <ol class="rows">
+<li class="row" data-tags="beatless|deep listening|long tracks" data-search="drone · long tones sustained tones, slow movement, deep listening. from the synth and tape pioneers to modern organ and guitar drones and the darker, heavier end. long tracks, best with headphones. beatless deep listening long tracks drone is music of sustained tones and slow change. the pioneers here are eliane radigue, who spent decades working with a single arp synthesizer, pauline oliveros, whose deep listening was recorded in an underground cistern, and coil and thomas koner. stars of the lid and kali malone represent the modern guitar and organ drones, while lustmord, eleh and yellow swans lead into darker and heavier territory. long tracks, slow listening." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLSSvpRjRrdL8" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-014.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-014</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLSSvpRjRrdL8" rel="noopener">Drone · Long Tones</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Sustained tones, slow movement, deep listening. From the synth and tape pioneers to modern organ and guitar drones and the darker, heavier end. Long tracks, best with headphones.</p>
+      <p class="meta"><span>15 tracks</span><span>3 h 10 min</span></p>
+      <ul class="tags"><li>beatless</li><li>deep listening</li><li>long tracks</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc014-bg" aria-label="Background for Drone · Long Tones">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc014-bg"><div><p class="bg">Drone is music of sustained tones and slow change. The pioneers here are Éliane Radigue, who spent decades working with a single ARP synthesizer, Pauline Oliveros, whose Deep Listening was recorded in an underground cistern, and Coil and Thomas Köner. Stars of the Lid and Kali Malone represent the modern guitar and organ drones, while Lustmord, Eleh and Yellow Swans lead into darker and heavier territory. Long tracks, slow listening.</p></div></div>
+</li>
+<li class="row" data-tags="calm|hypnotic|favourites" data-search="ambient · loscil &amp; kindred spirits built around loscil: slow pulses, submerged dub textures and glacial calm. his tracks are woven together with old favourites like lawrence english and abul mogard and kindred spirits from kranky, 12k and beyond. order matters, made to be heard start to finish. calm hypnotic favourites built around loscil, the project of vancouver musician scott morgan, whose albums on the kranky label combine slow pulses, submerged textures and a quiet sense of the ocean. his tracks are woven together with kindred spirits: lawrence english and abul mogard, plus artists from the kranky and 12k circles like pan american, taylor deupree and christina vantzou. the order is deliberate: loscil returns every few tracks like a tide." data-added="2026-11-20">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLMEl4VDAIsOo" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-015.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-015</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLMEl4VDAIsOo" rel="noopener">Ambient · Loscil &amp; Kindred Spirits</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Built around Loscil: slow pulses, submerged dub textures and glacial calm. His tracks are woven together with old favourites like Lawrence English and Abul Mogard and kindred spirits from Kranky, 12k and beyond. Order matters, made to be heard start to finish.</p>
+      <p class="meta"><span>24 tracks</span><span>2 h 32 min</span></p>
+      <ul class="tags"><li>calm</li><li>hypnotic</li><li>favourites</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc015-bg" aria-label="Background for Ambient · Loscil &amp; Kindred Spirits">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc015-bg"><div><p class="bg">Built around Loscil, the project of Vancouver musician Scott Morgan, whose albums on the Kranky label combine slow pulses, submerged textures and a quiet sense of the ocean. His tracks are woven together with kindred spirits: Lawrence English and Abul Mogard, plus artists from the Kranky and 12k circles like Pan American, Taylor Deupree and Christina Vantzou. The order is deliberate: Loscil returns every few tracks like a tide.</p></div></div>
+</li>
+<li class="row" data-tags="cold|beatless|field recordings" data-search="ambient · arctic &amp; glacial cold air, ice and long northern nights. nordic ambient, glacial drones and field recordings from frozen places, from biosphere&#x27;s substrata to icelandic and norwegian sound worlds. cold beatless field recordings ambient from cold places. it opens with biosphere&#x27;s substrata, recorded by geir jenssen in the far north of norway and still the reference point for arctic ambient. around it are real recordings of ice and water by chris watson, jana winderen and thomas koner, the norwegian circle of deathprod, deaf center and northaunt, and icelandic composers like johann johannsson and hildur guðnadottir. music for long nights and white landscapes." data-added="2026-11-20">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLTboqZMggtgw" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-016.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-016</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLTboqZMggtgw" rel="noopener">Ambient · Arctic &amp; Glacial</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Cold air, ice and long northern nights. Nordic ambient, glacial drones and field recordings from frozen places, from Biosphere&#x27;s Substrata to Icelandic and Norwegian sound worlds.</p>
+      <p class="meta"><span>22 tracks</span><span>2 h 42 min</span></p>
+      <ul class="tags"><li>cold</li><li>beatless</li><li>field recordings</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc016-bg" aria-label="Background for Ambient · Arctic &amp; Glacial">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc016-bg"><div><p class="bg">Ambient from cold places. It opens with Biosphere&#x27;s Substrata, recorded by Geir Jenssen in the far north of Norway and still the reference point for arctic ambient. Around it are real recordings of ice and water by Chris Watson, Jana Winderen and Thomas Köner, the Norwegian circle of Deathprod, Deaf Center and Northaunt, and Icelandic composers like Jóhann Jóhannsson and Hildur Guðnadóttir. Music for long nights and white landscapes.</p></div></div>
+</li>
+<li class="row" data-tags="dark|beatless|deep listening" data-search="dark ambient · classics to today dark ambient from the isolationist classics to the cryo chamber era and the experimental edge. deep rumble, cold spaces and slow dread, best in the dark with headphones. dark beatless deep listening dark ambient from its isolationist classics to today. lustmord, raison d&#x27;etre and sleep research facility defined the genre&#x27;s deep rumbles and unsettling spaces. the cryo chamber label around atrium carceri gave it a new home and a cinematic edge, with artists like cities last broadcast and dronny darko. the final part moves to the experimental edge, where the haxan cloak, raime and roly porter use the same darkness for something heavier and more physical." data-added="2026-11-20">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLF401SS6VwFw" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-017.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-017</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLF401SS6VwFw" rel="noopener">Dark Ambient · Classics to Today</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Dark ambient from the isolationist classics to the Cryo Chamber era and the experimental edge. Deep rumble, cold spaces and slow dread, best in the dark with headphones.</p>
+      <p class="meta"><span>22 tracks</span><span>2 h 45 min</span></p>
+      <ul class="tags"><li>dark</li><li>beatless</li><li>deep listening</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc017-bg" aria-label="Background for Dark Ambient · Classics to Today">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc017-bg"><div><p class="bg">Dark ambient from its isolationist classics to today. Lustmord, Raison d&#x27;être and Sleep Research Facility defined the genre&#x27;s deep rumbles and unsettling spaces. The Cryo Chamber label around Atrium Carceri gave it a new home and a cinematic edge, with artists like Cities Last Broadcast and Dronny Darko. The final part moves to the experimental edge, where The Haxan Cloak, Raime and Roly Porter use the same darkness for something heavier and more physical.</p></div></div>
+</li>
+<li class="row" data-tags="beatless|calm|history" data-search="ambient · space &amp; cosmos ambient for drifting through space. from the cosmic synth pioneers and the hearts of space era to modern space ambient. slow, wide and weightless. beatless calm history ambient for drifting through space. the cosmic pioneers come first: tangerine dream, klaus schulze, jean-michel jarre and vangelis. the middle belongs to the era of the long-running american radio show hearts of space, with steve roach, michael stearns and jonn serrie, plus brian eno&#x27;s apollo, written for footage of the moon landings. modern space ambient follows, from biosphere&#x27;s microgravity to carbon based lifeforms and stellardrone. slow, wide and weightless." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLJPR1K62m7NY" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-018.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-018</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLJPR1K62m7NY" rel="noopener">Ambient · Space &amp; Cosmos</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Ambient for drifting through space. From the cosmic synth pioneers and the Hearts of Space era to modern space ambient. Slow, wide and weightless.</p>
+      <p class="meta"><span>20 tracks</span><span>3 h 12 min</span></p>
+      <ul class="tags"><li>beatless</li><li>calm</li><li>history</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc018-bg" aria-label="Background for Ambient · Space &amp; Cosmos">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc018-bg"><div><p class="bg">Ambient for drifting through space. The cosmic pioneers come first: Tangerine Dream, Klaus Schulze, Jean-Michel Jarre and Vangelis. The middle belongs to the era of the long-running American radio show Hearts of Space, with Steve Roach, Michael Stearns and Jonn Serrie, plus Brian Eno&#x27;s Apollo, written for footage of the moon landings. Modern space ambient follows, from Biosphere&#x27;s Microgravity to Carbon Based Lifeforms and Stellardrone. Slow, wide and weightless.</p></div></div>
+</li>
+<li class="row" data-tags="history|calm|beatless" data-search="kankyo ongaku · japanese environmental music japanese environmental music of the 80s: music made for spaces, shops, museums and quiet rooms. soft synths, marimba, water and air. calm without being sleepy, designed to sit gently in the background or reward close listening. history calm beatless kankyo ongaku means environmental music. in 1980s japan, composers wrote music for spaces: shops, museums, galleries, apartment buildings, even a cosmetics brand. hiroshi yoshimura, satoshi ashikawa and yoshio ojima are at the core, joined by haruomi hosono of yellow magic orchestra and the percussion of mkwaju ensemble. long overlooked, this music was rediscovered through reissues in the 2010s. calm without being sleepy, designed to sit in a room or reward close listening." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLOB2JKKMmbLM" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-024.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-024</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLOB2JKKMmbLM" rel="noopener">Kankyō Ongaku · Japanese Environmental Music</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Japanese environmental music of the 80s: music made for spaces, shops, museums and quiet rooms. Soft synths, marimba, water and air. Calm without being sleepy, designed to sit gently in the background or reward close listening.</p>
+      <p class="meta"><span>20 tracks</span><span>2 h 35 min</span></p>
+      <ul class="tags"><li>history</li><li>calm</li><li>beatless</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc024-bg" aria-label="Background for Kankyō Ongaku · Japanese Environmental Music">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc024-bg"><div><p class="bg">Kankyo ongaku means environmental music. In 1980s Japan, composers wrote music for spaces: shops, museums, galleries, apartment buildings, even a cosmetics brand. Hiroshi Yoshimura, Satoshi Ashikawa and Yoshio Ojima are at the core, joined by Haruomi Hosono of Yellow Magic Orchestra and the percussion of Mkwaju Ensemble. Long overlooked, this music was rediscovered through reissues in the 2010s. Calm without being sleepy, designed to sit in a room or reward close listening.</p></div></div>
+</li>
+  </ol>
+</section>
+<section class="family pat-2" id="experimental-sound-design">
+  <header class="fam-head" style="--img:url(thumbs/fam-experimental.jpg)">
+    <span class="fam-no">02</span>
+    <h2>Experimental &amp; Sound Design</h2>
+    <span class="fam-count">5</span>
+    <button class="info" type="button" aria-expanded="false" aria-controls="experimental-sound-design-info">Info</button>
+  </header>
+  <div class="unfold" id="experimental-sound-design-info"><div><p class="fam-info">Here the sound itself is the composition. The line runs from musique concrète in late-1940s Paris, where recorded noises were cut and looped on tape, through the electronic studios of Cologne and the BBC Radiophonic Workshop, to IDM, glitch and today&#x27;s sound sculptors. Methods change, from razor blades and tape to granular synthesis and modular systems, but the question stays the same: what happens if a sound is treated as material rather than as a carrier for melody? Rhythm research, texture, digital precision and broken machines all live in this corner.</p></div></div>
+  <ol class="rows">
+<li class="row" data-tags="experimental|rhythm|texture" data-search="experimental · niche &amp; refined niche, experimental and refined electronic music. idm roots, rhythm research and careful synthesis. made for focused listening. experimental rhythm texture a tour through refined and niche electronic music. it starts with the idm and glitch pioneers: autechre, oval with its deliberately skipping cds, pan sonic and boards of canada. then comes rhythm as a field of research, with mark fell, rian treanor, jlin and lorenzo senni&#x27;s deconstructed trance arpeggios. the final part is about synthesis and voice, from caterina barbieri&#x27;s modular patterns to holly herndon and laurel halo. made for focused listening rather than background." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLWzKPVpnG1ZI" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-009.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-009</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLWzKPVpnG1ZI" rel="noopener">Experimental · Niche &amp; Refined</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Niche, experimental and refined electronic music. IDM roots, rhythm research and careful synthesis. Made for focused listening.</p>
+      <p class="meta"><span>22 tracks</span><span>1 h 52 min</span></p>
+      <ul class="tags"><li>experimental</li><li>rhythm</li><li>texture</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc009-bg" aria-label="Background for Experimental · Niche &amp; Refined">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc009-bg"><div><p class="bg">A tour through refined and niche electronic music. It starts with the IDM and glitch pioneers: Autechre, Oval with its deliberately skipping CDs, Pan Sonic and Boards of Canada. Then comes rhythm as a field of research, with Mark Fell, Rian Treanor, Jlin and Lorenzo Senni&#x27;s deconstructed trance arpeggios. The final part is about synthesis and voice, from Caterina Barbieri&#x27;s modular patterns to Holly Herndon and Laurel Halo. Made for focused listening rather than background.</p></div></div>
+</li>
+<li class="row" data-tags="texture|experimental" data-search="sound design · texture first electronic music where the sound itself is the point. field recordings and samples bent into music, clinical digital precision and modern sound sculptures. texture experimental music in which the sound comes first. amon tobin and matthew herbert shape field recordings and found sounds into music, herbert once building a whole album from the life of a single pig. ryoji ikeda, alva noto and monolake work with digital precision and clinical clarity. the last section belongs to modern sound sculptors like objekt, arca, sophie, oneohtrix point never and ben frost, where production itself becomes the instrument." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLIJjfVq73lAk" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-010.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-010</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLIJjfVq73lAk" rel="noopener">Sound Design · Texture First</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Electronic music where the sound itself is the point. Field recordings and samples bent into music, clinical digital precision and modern sound sculptures.</p>
+      <p class="meta"><span>21 tracks</span><span>1 h 35 min</span></p>
+      <ul class="tags"><li>texture</li><li>experimental</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc010-bg" aria-label="Background for Sound Design · Texture First">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc010-bg"><div><p class="bg">Music in which the sound comes first. Amon Tobin and Matthew Herbert shape field recordings and found sounds into music, Herbert once building a whole album from the life of a single pig. Ryoji Ikeda, Alva Noto and Monolake work with digital precision and clinical clarity. The last section belongs to modern sound sculptors like Objekt, Arca, SOPHIE, Oneohtrix Point Never and Ben Frost, where production itself becomes the instrument.</p></div></div>
+</li>
+<li class="row" data-tags="history|texture|experimental" data-search="electroacoustic · the roots of sound design where sound design began: musique concrete in paris, the electronic studios in cologne and philips eindhoven, the bbc radiophonic workshop and the first synthesizer pioneers. tape loops, sine waves and recorded doors. strange, historic and surprisingly modern. history texture experimental where sound design began. pierre schaeffer recorded trains in paris in 1948 and called the result musique concrete. stockhausen built electronic music from sine waves in cologne, varese and xenakis wrote for the philips pavilion at the 1958 brussels world fair, and delia derbyshire and daphne oram shaped the sound of the bbc radiophonic workshop. tape loops, sine waves and recorded doors: strange, historic and surprisingly modern." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLTZPv7X2Hntk" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-025.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-025</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLTZPv7X2Hntk" rel="noopener">Electroacoustic · The Roots of Sound Design</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Where sound design began: musique concrète in Paris, the electronic studios in Cologne and Philips Eindhoven, the BBC Radiophonic Workshop and the first synthesizer pioneers. Tape loops, sine waves and recorded doors. Strange, historic and surprisingly modern.</p>
+      <p class="meta"><span>23 tracks</span><span>3 h 34 min</span></p>
+      <ul class="tags"><li>history</li><li>texture</li><li>experimental</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc025-bg" aria-label="Background for Electroacoustic · The Roots of Sound Design">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc025-bg"><div><p class="bg">Where sound design began. Pierre Schaeffer recorded trains in Paris in 1948 and called the result musique concrète. Stockhausen built electronic music from sine waves in Cologne, Varèse and Xenakis wrote for the Philips Pavilion at the 1958 Brussels World Fair, and Delia Derbyshire and Daphne Oram shaped the sound of the BBC Radiophonic Workshop. Tape loops, sine waves and recorded doors: strange, historic and surprisingly modern.</p></div></div>
+</li>
+<li class="row" data-tags="experimental|texture|long tracks" data-search="modular · synthesizers unbound patch cables instead of presets. from the buchla and west coast pioneers to today&#x27;s modular performers, music that comes straight out of voltage, envelopes and happy accidents. ideal listening for anyone who builds sounds. experimental texture long tracks modular synthesis began on the american west coast, where don buchla built instruments for morton subotnick and the san francisco tape music center in the 1960s. suzanne ciani took the buchla on stage in the 70s, and pauline anna strom recorded her meditative synthesizer music in san francisco. since the 2010s a new generation, from kaitlyn aurelia smith to caterina barbieri, has brought the instrument back, and colin benders and hainbach play it live from the rack." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLRQWYd_ydA6A" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-041.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-041</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLRQWYd_ydA6A" rel="noopener">Modular · Synthesizers Unbound</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Patch cables instead of presets. From the Buchla and West Coast pioneers to today&#x27;s modular performers, music that comes straight out of voltage, envelopes and happy accidents. Ideal listening for anyone who builds sounds.</p>
+      <p class="meta"><span>11 tracks</span><span>1 h 25 min</span></p>
+      <ul class="tags"><li>experimental</li><li>texture</li><li>long tracks</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc041-bg" aria-label="Background for Modular · Synthesizers Unbound">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc041-bg"><div><p class="bg">Modular synthesis began on the American West Coast, where Don Buchla built instruments for Morton Subotnick and the San Francisco Tape Music Center in the 1960s. Suzanne Ciani took the Buchla on stage in the 70s, and Pauline Anna Strom recorded her meditative synthesizer music in San Francisco. Since the 2010s a new generation, from Kaitlyn Aurelia Smith to Caterina Barbieri, has brought the instrument back, and Colin Benders and Hainbach play it live from the rack.</p></div></div>
+</li>
+<li class="row" data-tags="long tracks|hypnotic|deep listening" data-search="generative · systems &amp; process music that plays itself. rules, loops and systems set in motion and left to unfold, from tape-loop process pieces and minimalism to algorithms and self-generating software. the composer designs the machine, the machine writes the music. long tracks hypnotic deep listening generative music starts with rules rather than notes. terry riley&#x27;s in c (1964) gives 53 short phrases that each player repeats at will, and brian eno&#x27;s discreet music (1975) came from tape loops left to run. laurie spiegel wrote music software at bell labs, and roland kayn built self-regulating electronic systems he called cybernetic music. eno, who coined the term generative music in the 90s, released reflection (2017) as one such piece." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLDA7ug3A7pKw" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-042.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-042</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLDA7ug3A7pKw" rel="noopener">Generative · Systems &amp; Process</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Music that plays itself. Rules, loops and systems set in motion and left to unfold, from tape-loop process pieces and minimalism to algorithms and self-generating software. The composer designs the machine, the machine writes the music.</p>
+      <p class="meta"><span>8 tracks</span><span>2 h 53 min</span></p>
+      <ul class="tags"><li>long tracks</li><li>hypnotic</li><li>deep listening</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc042-bg" aria-label="Background for Generative · Systems &amp; Process">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc042-bg"><div><p class="bg">Generative music starts with rules rather than notes. Terry Riley&#x27;s In C (1964) gives 53 short phrases that each player repeats at will, and Brian Eno&#x27;s Discreet Music (1975) came from tape loops left to run. Laurie Spiegel wrote music software at Bell Labs, and Roland Kayn built self-regulating electronic systems he called cybernetic music. Eno, who coined the term generative music in the 90s, released Reflection (2017) as one such piece.</p></div></div>
+</li>
+  </ol>
+</section>
+<section class="family pat-3" id="dub-techno-dub">
+  <header class="fam-head" style="--img:url(thumbs/fam-dub.jpg)">
+    <span class="fam-no">03</span>
+    <h2>Dub Techno &amp; Dub</h2>
+    <span class="fam-count">8</span>
+    <button class="info" type="button" aria-expanded="false" aria-controls="dub-techno-dub-info">Info</button>
+  </header>
+  <div class="unfold" id="dub-techno-dub-info"><div><p class="fam-info">Dub began in Jamaica around 1970, when engineers like King Tubby and Lee Perry started remixing reggae B-sides at the mixing desk: vocals out, drum and bass up, everything else thrown into echo and spring reverb. In the early 90s Moritz von Oswald and Mark Ernestus carried that method into Detroit-influenced techno with their Berlin label Basic Channel. The result was dub techno: a chord stab dissolving in delay, a deep bass, a steady kick, and a lot of hiss and space. This family covers both sides: the Jamaican and UK roots of dub and everything that grew out of Basic Channel.</p></div></div>
+  <ol class="rows">
+<li class="row" data-tags="history|hypnotic" data-search="dub techno · classics a walk through dub techno history, from the basic channel origins in berlin to the detroit revival. smoky chords, endless delay, deep bass. history hypnotic a chronological walk through dub techno. it starts in berlin around 1993 with basic channel and maurizio, the releases that defined the sound, moves through rhythm &amp; sound, where jamaican singers returned to the music that had borrowed from them, and the more abstract chain reaction label in the late 90s. from there it follows the 2000s experiments of pole and vladislav delay and the us revival around echospace and deepchord in detroit. listen for how little changes from track to track and how much that little matters." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLR90or8sEQTI" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-001.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-001</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLR90or8sEQTI" rel="noopener">Dub Techno · Classics</a><span class="new" hidden>new</span></h3>
+      <p class="desc">A walk through dub techno history, from the Basic Channel origins in Berlin to the Detroit revival. Smoky chords, endless delay, deep bass.</p>
+      <p class="meta"><span>30 tracks</span><span>4 h 35 min</span></p>
+      <ul class="tags"><li>history</li><li>hypnotic</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc001-bg" aria-label="Background for Dub Techno · Classics">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc001-bg"><div><p class="bg">A chronological walk through dub techno. It starts in Berlin around 1993 with Basic Channel and Maurizio, the releases that defined the sound, moves through Rhythm &amp; Sound, where Jamaican singers returned to the music that had borrowed from them, and the more abstract Chain Reaction label in the late 90s. From there it follows the 2000s experiments of Pole and Vladislav Delay and the US revival around Echospace and DeepChord in Detroit. Listen for how little changes from track to track and how much that little matters.</p></div></div>
+</li>
+<li class="row" data-tags="hypnotic|dancefloor" data-search="dub techno · today current dub techno, from solid club material to the experimental fringe. the sound is still alive and still mutating. hypnotic dancefloor dub techno as it sounds now. the first half stays close to the classic formula: producers like federsen, forest drive west and luigi tozzi refine the chord-and-delay sound with modern clarity and weight. the second half drifts towards the edges, where topdown dialectic, sa pa, jay glass dubs and mark ernestus&#x27; ndagga rhythm force bend the genre into stranger shapes. a snapshot of a style that is often called conservative and keeps proving otherwise." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLVlfg4vQqVNk" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-002.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-002</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLVlfg4vQqVNk" rel="noopener">Dub Techno · Today</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Current dub techno, from solid club material to the experimental fringe. The sound is still alive and still mutating.</p>
+      <p class="meta"><span>28 tracks</span><span>3 h 11 min</span></p>
+      <ul class="tags"><li>hypnotic</li><li>dancefloor</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc002-bg" aria-label="Background for Dub Techno · Today">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc002-bg"><div><p class="bg">Dub techno as it sounds now. The first half stays close to the classic formula: producers like Federsen, Forest Drive West and Luigi Tozzi refine the chord-and-delay sound with modern clarity and weight. The second half drifts towards the edges, where Topdown Dialectic, Sa Pa, Jay Glass Dubs and Mark Ernestus&#x27; Ndagga Rhythm Force bend the genre into stranger shapes. A snapshot of a style that is often called conservative and keeps proving otherwise.</p></div></div>
+</li>
+<li class="row" data-tags="warm|calm" data-search="warm &amp; organic dub and ambient techno that feels warm instead of cold. distance, reverb and haze, but with a softer, more organic heart. warm calm much dub techno sounds like cold concrete at night. this playlist goes the other way: the same distance, reverb and haze, but with a softer, more organic heart. dorisburg, sven weisemann and newworldaquarium bring warmth through pads and melody, the field and dettinger build gentle loops, jan jelinek turns crackling jazz samples into something close to weather. music for late afternoons rather than empty warehouses." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLQ9KufMEN1y0" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-003.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-003</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLQ9KufMEN1y0" rel="noopener">Warm &amp; Organic</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Dub and ambient techno that feels warm instead of cold. Distance, reverb and haze, but with a softer, more organic heart.</p>
+      <p class="meta"><span>30 tracks</span><span>3 h 31 min</span></p>
+      <ul class="tags"><li>warm</li><li>calm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc003-bg" aria-label="Background for Warm &amp; Organic">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc003-bg"><div><p class="bg">Much dub techno sounds like cold concrete at night. This playlist goes the other way: the same distance, reverb and haze, but with a softer, more organic heart. Dorisburg, Sven Weisemann and Newworldaquarium bring warmth through pads and melody, The Field and Dettinger build gentle loops, Jan Jelinek turns crackling jazz samples into something close to weather. Music for late afternoons rather than empty warehouses.</p></div></div>
+</li>
+<li class="row" data-tags="calm|warm|hypnotic" data-search="downtempo dub · slow &amp; deep slow, half-time dub and ambient techno for winding down. deep basslines, smoky chords, lots of space. no goa, no psy. calm warm hypnotic dub at walking pace. the opening stays close to the reggae roots of the sound, with rhythm &amp; sound, beat pharmacy and the hand-played grooves of burnt friedman and jaki liebezeit, the former drummer of can. in the middle, dub techno slows into half-time with deepchord, echospace, intrusion and pole. towards the end andy stott and dj python show how slow and heavy, or slow and dreamy, this music can get. no goa, no psy, just weight and space." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLCpuZ74C4GhQ" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-007.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-007</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLCpuZ74C4GhQ" rel="noopener">Downtempo Dub · Slow &amp; Deep</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Slow, half-time dub and ambient techno for winding down. Deep basslines, smoky chords, lots of space. No goa, no psy.</p>
+      <p class="meta"><span>22 tracks</span><span>2 h 21 min</span></p>
+      <ul class="tags"><li>calm</li><li>warm</li><li>hypnotic</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc007-bg" aria-label="Background for Downtempo Dub · Slow &amp; Deep">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc007-bg"><div><p class="bg">Dub at walking pace. The opening stays close to the reggae roots of the sound, with Rhythm &amp; Sound, Beat Pharmacy and the hand-played grooves of Burnt Friedman and Jaki Liebezeit, the former drummer of Can. In the middle, dub techno slows into half-time with DeepChord, Echospace, Intrusion and Pole. Towards the end Andy Stott and DJ Python show how slow and heavy, or slow and dreamy, this music can get. No goa, no psy, just weight and space.</p></div></div>
+</li>
+<li class="row" data-tags="hypnotic|long tracks|deep listening" data-search="dub techno · deep &amp; psychedelic picks from an old discogs forum thread asking for the deepest and most psychedelic dub techno track people know. hypnotic, repetitive, best heard from start to finish on decent speakers. hypnotic long tracks deep listening built from an old discogs forum thread asking people for the deepest and most psychedelic dub techno track they knew. the answers form a map of the genre&#x27;s inner circle: the echospace and deepchord world from detroit, quantec, stl and mikkel metal from europe, and the chain reaction roots with hallucinator, vainqueur and porter ricks. some of these tracks only exist as fan uploads, a reminder of how much of this music lived on 12 inch vinyl and nowhere else." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLbynCKgqAQNY" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-011.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-011</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLbynCKgqAQNY" rel="noopener">Dub Techno · Deep &amp; Psychedelic</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Picks from an old Discogs forum thread asking for the deepest and most psychedelic dub techno track people know. Hypnotic, repetitive, best heard from start to finish on decent speakers.</p>
+      <p class="meta"><span>23 tracks</span><span>4 h 01 min</span></p>
+      <ul class="tags"><li>hypnotic</li><li>long tracks</li><li>deep listening</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc011-bg" aria-label="Background for Dub Techno · Deep &amp; Psychedelic">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc011-bg"><div><p class="bg">Built from an old Discogs forum thread asking people for the deepest and most psychedelic dub techno track they knew. The answers form a map of the genre&#x27;s inner circle: the Echospace and DeepChord world from Detroit, Quantec, STL and Mikkel Metal from Europe, and the Chain Reaction roots with Hallucinator, Vainqueur and Porter Ricks. Some of these tracks only exist as fan uploads, a reminder of how much of this music lived on 12 inch vinyl and nowhere else.</p></div></div>
+</li>
+<li class="row" data-tags="history|warm|global" data-search="dub · the roots where it all began: jamaica in the 1970s. engineers like king tubby and lee perry turned the mixing desk into an instrument, stripping reggae down to drum and bass and sending everything else through echo and spring reverb. the foundation of every dub techno record. history warm global where it all began. in 1970s kingston, engineers took the instrumental b-sides of reggae singles and remixed them live at the desk, pulling tracks in and out, adding echo, reverb and filters until the song became a space. king tubby, lee perry at his black ark studio, augustus pablo with his melodica, prince jammy and scientist all appear here. every delay in dub techno can be traced back to these records." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLV6K3W_rXnfw" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-019.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-019</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLV6K3W_rXnfw" rel="noopener">Dub · The Roots</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Where it all began: Jamaica in the 1970s. Engineers like King Tubby and Lee Perry turned the mixing desk into an instrument, stripping reggae down to drum and bass and sending everything else through echo and spring reverb. The foundation of every dub techno record.</p>
+      <p class="meta"><span>19 tracks</span><span>1 h 07 min</span></p>
+      <ul class="tags"><li>history</li><li>warm</li><li>global</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc019-bg" aria-label="Background for Dub · The Roots">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc019-bg"><div><p class="bg">Where it all began. In 1970s Kingston, engineers took the instrumental B-sides of reggae singles and remixed them live at the desk, pulling tracks in and out, adding echo, reverb and filters until the song became a space. King Tubby, Lee Perry at his Black Ark studio, Augustus Pablo with his melodica, Prince Jammy and Scientist all appear here. Every delay in dub techno can be traced back to these records.</p></div></div>
+</li>
+<li class="row" data-tags="history|rhythm" data-search="dub · uk &amp; steppers how dub travelled: from jamaica to london sound systems and new york basements. adrian sherwood&#x27;s on-u sound, mad professor and jah shaka made it heavier, stranger and more electronic, leading into the digital steppers sound of the 90s. history rhythm how dub travelled. in late-70s and 80s london, adrian sherwood&#x27;s on-u sound, mad professor and jah shaka&#x27;s sound system made it heavier, stranger and more electronic. meanwhile kingston went digital, and in new york lloyd barnes&#x27; wackies label kept a deep, hazy version alive, the catalogue basic channel later reissued. the 90s close the playlist with the digital steppers sound of zion train, iration steppas and alpha &amp; omega." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLSw2syB9AOqk" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-020.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-020</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLSw2syB9AOqk" rel="noopener">Dub · UK &amp; Steppers</a><span class="new" hidden>new</span></h3>
+      <p class="desc">How dub travelled: from Jamaica to London sound systems and New York basements. Adrian Sherwood&#x27;s On-U Sound, Mad Professor and Jah Shaka made it heavier, stranger and more electronic, leading into the digital steppers sound of the 90s.</p>
+      <p class="meta"><span>20 tracks</span><span>1 h 21 min</span></p>
+      <ul class="tags"><li>history</li><li>rhythm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc020-bg" aria-label="Background for Dub · UK &amp; Steppers">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc020-bg"><div><p class="bg">How dub travelled. In late-70s and 80s London, Adrian Sherwood&#x27;s On-U Sound, Mad Professor and Jah Shaka&#x27;s sound system made it heavier, stranger and more electronic. Meanwhile Kingston went digital, and in New York Lloyd Barnes&#x27; Wackies label kept a deep, hazy version alive, the catalogue Basic Channel later reissued. The 90s close the playlist with the digital steppers sound of Zion Train, Iration Steppas and Alpha &amp; Omega.</p></div></div>
+</li>
+<li class="row" data-tags="history|rhythm|dark" data-search="dub · echoes dub as a method, not a genre. how echo, space and bass weight spread into post-punk, trip-hop, dub-house and dubstep, and closed the circle back to dub techno. history rhythm dark dub as a method rather than a genre. post-punk bands like the slits, the pop group and public image ltd took its echo and bass in 1979. in the 90s it shaped bristol trip-hop and british dub-house, from smith &amp; mighty to massive attack&#x27;s dub album with mad professor. in the 2000s dubstep took dub&#x27;s bass weight into digital territory on labels like hyperdub and dmz, and modern projects like the bug and king midas sound close the circle." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLTIFF_JGlgIk" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-021.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-021</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLTIFF_JGlgIk" rel="noopener">Dub · Echoes</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Dub as a method, not a genre. How echo, space and bass weight spread into post-punk, trip-hop, dub-house and dubstep, and closed the circle back to dub techno.</p>
+      <p class="meta"><span>20 tracks</span><span>1 h 49 min</span></p>
+      <ul class="tags"><li>history</li><li>rhythm</li><li>dark</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc021-bg" aria-label="Background for Dub · Echoes">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc021-bg"><div><p class="bg">Dub as a method rather than a genre. Post-punk bands like The Slits, The Pop Group and Public Image Ltd took its echo and bass in 1979. In the 90s it shaped Bristol trip-hop and British dub-house, from Smith &amp; Mighty to Massive Attack&#x27;s dub album with Mad Professor. In the 2000s dubstep took dub&#x27;s bass weight into digital territory on labels like Hyperdub and DMZ, and modern projects like The Bug and King Midas Sound close the circle.</p></div></div>
+</li>
+  </ol>
+</section>
+<section class="family pat-4" id="organic-roots">
+  <header class="fam-head" style="--img:url(thumbs/fam-organic.jpg)">
+    <span class="fam-no">04</span>
+    <h2>Organic &amp; Roots</h2>
+    <span class="fam-count">3</span>
+    <button class="info" type="button" aria-expanded="false" aria-controls="organic-roots-info">Info</button>
+  </header>
+  <div class="unfold" id="organic-roots-info"><div><p class="fam-info">Electronic music with soil under its fingernails. This family gathers music where machines meet older things: hand percussion, flutes, field recordings, forests and rivers, or the pastoral side of 1970s German electronics. Some of it comes from Jon Hassell&#x27;s idea of a Fourth World music, some from Andean and African rhythms meeting club culture, some from Kosmische musicians recording in farmhouses in the countryside. The common thread is warmth and a sense of place, music that feels grown rather than programmed.</p></div></div>
+  <ol class="rows">
+<li class="row" data-tags="global|rhythm|warm" data-search="rooted / tribal / organic electronic music with roots: andean flutes, african and indonesian rhythms, fourth world ambient and organic club sounds. global rhythm warm electronic music with roots, in several directions at once. jon hassell and steve roach represent the fourth world and tribal ambient ancestors. from south america come nicola cruz, el buho and chancha via circuito, who mix andean instruments and folklore with slow electronic grooves. from uganda and indonesia come nihiloxica and animistic beliefs, whose percussion is anything but decorative. the playlist ends closer to the club, where organic house turns all of this into something you can move to." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLVkDVhfnIVBw" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-005.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-005</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLVkDVhfnIVBw" rel="noopener">Rooted / Tribal / Organic</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Electronic music with roots: Andean flutes, African and Indonesian rhythms, Fourth World ambient and organic club sounds.</p>
+      <p class="meta"><span>28 tracks</span><span>2 h 44 min</span></p>
+      <ul class="tags"><li>global</li><li>rhythm</li><li>warm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc005-bg" aria-label="Background for Rooted / Tribal / Organic">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc005-bg"><div><p class="bg">Electronic music with roots, in several directions at once. Jon Hassell and Steve Roach represent the Fourth World and tribal ambient ancestors. From South America come Nicola Cruz, El Búho and Chancha Vía Circuito, who mix Andean instruments and folklore with slow electronic grooves. From Uganda and Indonesia come Nihiloxica and Animistic Beliefs, whose percussion is anything but decorative. The playlist ends closer to the club, where organic house turns all of this into something you can move to.</p></div></div>
+</li>
+<li class="row" data-tags="field recordings|beatless|deep listening" data-search="jungle / field recordings &amp; organic ambient rainforest recordings, fourth world ambient and nature-inspired electronics. mostly beatless, made for deep listening. field recordings beatless deep listening mostly beatless, mostly outdoors. francisco lopez recorded the costa rican rainforest for la selva and presented it as a composition, not a document. jana winderen listens underwater. around these real places sit imagined ones: jon hassell&#x27;s fourth world, midori takada&#x27;s marimba, hiroshi yoshimura&#x27;s environmental music and andrew pekler&#x27;s invented tropics. best with headphones and with nothing else to do." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLDOnp3NNkTRI" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-006.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-006</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLDOnp3NNkTRI" rel="noopener">Jungle / Field Recordings &amp; Organic Ambient</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Rainforest recordings, Fourth World ambient and nature-inspired electronics. Mostly beatless, made for deep listening.</p>
+      <p class="meta"><span>21 tracks</span><span>2 h 43 min</span></p>
+      <ul class="tags"><li>field recordings</li><li>beatless</li><li>deep listening</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc006-bg" aria-label="Background for Jungle / Field Recordings &amp; Organic Ambient">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc006-bg"><div><p class="bg">Mostly beatless, mostly outdoors. Francisco López recorded the Costa Rican rainforest for La Selva and presented it as a composition, not a document. Jana Winderen listens underwater. Around these real places sit imagined ones: Jon Hassell&#x27;s Fourth World, Midori Takada&#x27;s marimba, Hiroshi Yoshimura&#x27;s environmental music and Andrew Pekler&#x27;s invented tropics. Best with headphones and with nothing else to do.</p></div></div>
+</li>
+<li class="row" data-tags="history|hypnotic|long tracks" data-search="kosmische musik · berlin school the german roots of ambient and electronic music, 1970s. motorik grooves, synth drifts and gentle pastorals from cluster, harmonia, neu!, popol vuh and the berlin school around tangerine dream and klaus schulze. eno learned a lot here. history hypnotic long tracks the german roots of ambient and electronic music. in the 1970s, bands that british critics lumped together as krautrock explored motorik grooves, synth drifts and gentle pastorals. cluster and harmonia recorded in the countryside village of forst, neu! invented a hypnotic straight-ahead beat, and the berlin school of tangerine dream and klaus schulze stretched sequencers into long journeys. brian eno came to work with cluster and learned a lot here. manuel gottsching&#x27;s e2-e4 closes the playlist and later became a touchstone for house and techno." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLTU3LuVwV2PQ" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-023.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-023</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLTU3LuVwV2PQ" rel="noopener">Kosmische Musik · Berlin School</a><span class="new" hidden>new</span></h3>
+      <p class="desc">The German roots of ambient and electronic music, 1970s. Motorik grooves, synth drifts and gentle pastorals from Cluster, Harmonia, Neu!, Popol Vuh and the Berlin School around Tangerine Dream and Klaus Schulze. Eno learned a lot here.</p>
+      <p class="meta"><span>23 tracks</span><span>3 h 49 min</span></p>
+      <ul class="tags"><li>history</li><li>hypnotic</li><li>long tracks</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc023-bg" aria-label="Background for Kosmische Musik · Berlin School">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc023-bg"><div><p class="bg">The German roots of ambient and electronic music. In the 1970s, bands that British critics lumped together as krautrock explored motorik grooves, synth drifts and gentle pastorals. Cluster and Harmonia recorded in the countryside village of Forst, Neu! invented a hypnotic straight-ahead beat, and the Berlin School of Tangerine Dream and Klaus Schulze stretched sequencers into long journeys. Brian Eno came to work with Cluster and learned a lot here. Manuel Göttsching&#x27;s E2-E4 closes the playlist and later became a touchstone for house and techno.</p></div></div>
+</li>
+  </ol>
+</section>
+<section class="family pat-5" id="idm-electronica">
+  <header class="fam-head" style="--img:url(thumbs/fam-idm.jpg)">
+    <span class="fam-no">05</span>
+    <h2>IDM &amp; Electronica</h2>
+    <span class="fam-count">5</span>
+    <button class="info" type="button" aria-expanded="false" aria-controls="idm-electronica-info">Info</button>
+  </header>
+  <div class="unfold" id="idm-electronica-info"><div><p class="fam-info">In the early 1990s some producers started making techno for listening rather than dancing. Warp&#x27;s Artificial Intelligence compilation (1992) gave the movement a home, and the awkward label IDM, short for intelligent dance music, stuck despite everyone disliking it. From there the music split in two directions: melodic and nostalgic, built on worn tape and analogue warmth, or broken and glitchy, built on fractured rhythms and digital errors. Electronica is the wider, looser family around it: songs, folk instruments, voices and samples shaped by the same studio-as-instrument thinking.</p></div></div>
+  <ol class="rows">
+<li class="row" data-tags="history|rhythm" data-search="idm · origins how techno learned to sit still. the early 90s, when warp&#x27;s artificial intelligence series and a handful of british and european producers made electronic music for headphones and armchairs rather than dancefloors. history rhythm how techno learned to sit still. lfo and the future sound of london set the stage around 1990 and 1991, then warp&#x27;s artificial intelligence series gathered the first wave: polygon window (one of richard d. james&#x27; aliases), autechre, richie hawtin as f.u.s.e., speedy j and the black dog. by the mid 90s the field widened with aphex twin&#x27;s i care because you do, mouse on mars, luke vibert as wagon christ and the first squarepusher records, which pushed jungle breaks into the mix." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLdjPJ9DJWs0o" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-026.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-026</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLdjPJ9DJWs0o" rel="noopener">IDM · Origins</a><span class="new" hidden>new</span></h3>
+      <p class="desc">How techno learned to sit still. The early 90s, when Warp&#x27;s Artificial Intelligence series and a handful of British and European producers made electronic music for headphones and armchairs rather than dancefloors.</p>
+      <p class="meta"><span>19 tracks</span><span>2 h 00 min</span></p>
+      <ul class="tags"><li>history</li><li>rhythm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc026-bg" aria-label="Background for IDM · Origins">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc026-bg"><div><p class="bg">How techno learned to sit still. LFO and The Future Sound of London set the stage around 1990 and 1991, then Warp&#x27;s Artificial Intelligence series gathered the first wave: Polygon Window (one of Richard D. James&#x27; aliases), Autechre, Richie Hawtin as F.U.S.E., Speedy J and The Black Dog. By the mid 90s the field widened with Aphex Twin&#x27;s I Care Because You Do, Mouse on Mars, Luke Vibert as Wagon Christ and the first Squarepusher records, which pushed jungle breaks into the mix.</p></div></div>
+</li>
+<li class="row" data-tags="melodic|warm|calm" data-search="idm · melodic &amp; warm the tender side of idm. hazy melodies, worn-out tape, children&#x27;s choirs and analogue warmth, from boards of canada&#x27;s private mythology to the morr music and skam circles. nostalgic, never sentimental. melodic warm calm the tender side of idm. boards of canada built a whole private mythology from detuned synths, worn tape and fragments of old educational films, and a generation followed. around 2000 the german label morr music and berlin&#x27;s city centre offices gave this sound a home with b. fleischmann, arovane, isan and ulrich schnauss, while skam and benbecula in the uk added bola, christ. and ochre. nostalgic, never sentimental." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLKhKPiJHhW1s" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-027.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-027</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLKhKPiJHhW1s" rel="noopener">IDM · Melodic &amp; Warm</a><span class="new" hidden>new</span></h3>
+      <p class="desc">The tender side of IDM. Hazy melodies, worn-out tape, children&#x27;s choirs and analogue warmth, from Boards of Canada&#x27;s private mythology to the Morr Music and Skam circles. Nostalgic, never sentimental.</p>
+      <p class="meta"><span>19 tracks</span><span>1 h 37 min</span></p>
+      <ul class="tags"><li>melodic</li><li>warm</li><li>calm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc027-bg" aria-label="Background for IDM · Melodic &amp; Warm">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc027-bg"><div><p class="bg">The tender side of IDM. Boards of Canada built a whole private mythology from detuned synths, worn tape and fragments of old educational films, and a generation followed. Around 2000 the German label Morr Music and Berlin&#x27;s City Centre Offices gave this sound a home with B. Fleischmann, Arovane, Isan and Ulrich Schnauss, while Skam and Benbecula in the UK added Bola, Christ. and Ochre. Nostalgic, never sentimental.</p></div></div>
+</li>
+<li class="row" data-tags="glitch|rhythm|experimental" data-search="idm · broken &amp; glitch the sharp-edged side of idm. drill&#x27;n&#x27;bass, broken rhythms, digital errors used as instruments and algorithms that refuse to repeat themselves. demanding at times, but always musical. glitch rhythm experimental the sharp-edged side of idm. in the late 90s squarepusher and aphex twin turned jungle into hyperactive drill&#x27;n&#x27;bass, while autechre began dissolving rhythm into shifting systems. around 2001 the glitch years arrived: autechre&#x27;s confield, richard devine, matmos sampling surgery, plaid and aphex twin&#x27;s drukqs. later came venetian snares&#x27; breakcore with strings and clark&#x27;s dramatic complexity, and today producers like lanark artefax and proc fiskal carry the restless spirit forward." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLKwiJYirLmWU" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-028.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-028</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLKwiJYirLmWU" rel="noopener">IDM · Broken &amp; Glitch</a><span class="new" hidden>new</span></h3>
+      <p class="desc">The sharp-edged side of IDM. Drill&#x27;n&#x27;bass, broken rhythms, digital errors used as instruments and algorithms that refuse to repeat themselves. Demanding at times, but always musical.</p>
+      <p class="meta"><span>20 tracks</span><span>1 h 44 min</span></p>
+      <ul class="tags"><li>glitch</li><li>rhythm</li><li>experimental</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc028-bg" aria-label="Background for IDM · Broken &amp; Glitch">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc028-bg"><div><p class="bg">The sharp-edged side of IDM. In the late 90s Squarepusher and Aphex Twin turned jungle into hyperactive drill&#x27;n&#x27;bass, while Autechre began dissolving rhythm into shifting systems. Around 2001 the glitch years arrived: Autechre&#x27;s Confield, Richard Devine, Matmos sampling surgery, Plaid and Aphex Twin&#x27;s Drukqs. Later came Venetian Snares&#x27; breakcore with strings and Clark&#x27;s dramatic complexity, and today producers like Lanark Artefax and Proc Fiskal carry the restless spirit forward.</p></div></div>
+</li>
+<li class="row" data-tags="vocals|melodic|dark" data-search="electronica · songs &amp; shadows electronica with a voice. art-minded songs built from machines, from bristol trip-hop and icelandic strings to radiohead&#x27;s turn to electronics, the knife&#x27;s cold theatre and today&#x27;s club-adjacent songwriters. melancholic, strange, never plain pop. vocals melodic dark electronica with a voice. it starts in the 90s with lamb, portishead, massive attack and bjork, whose homogenic married icelandic strings with harsh beats. around 2000 radiohead turned to electronics with kid a, and indie bands like the notwist and lali puna grew up on idm. the knife and fever ray added cold theatre, and the 2010s brought james blake, mount kimbie, caribou, jamie xx and four tet into the space between club, song and art." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLD9_D3Zdhi2U" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-029.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-029</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLD9_D3Zdhi2U" rel="noopener">Electronica · Songs &amp; Shadows</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Electronica with a voice. Art-minded songs built from machines, from Bristol trip-hop and Icelandic strings to Radiohead&#x27;s turn to electronics, The Knife&#x27;s cold theatre and today&#x27;s club-adjacent songwriters. Melancholic, strange, never plain pop.</p>
+      <p class="meta"><span>20 tracks</span><span>1 h 35 min</span></p>
+      <ul class="tags"><li>vocals</li><li>melodic</li><li>dark</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc029-bg" aria-label="Background for Electronica · Songs &amp; Shadows">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc029-bg"><div><p class="bg">Electronica with a voice. It starts in the 90s with Lamb, Portishead, Massive Attack and Björk, whose Homogenic married Icelandic strings with harsh beats. Around 2000 Radiohead turned to electronics with Kid A, and indie bands like The Notwist and Lali Puna grew up on IDM. The Knife and Fever Ray added cold theatre, and the 2010s brought James Blake, Mount Kimbie, Caribou, Jamie xx and Four Tet into the space between club, song and art.</p></div></div>
+</li>
+<li class="row" data-tags="warm|organic|melodic" data-search="electronica · folktronica &amp; handmade electronica that sounds handmade. acoustic guitars, music boxes, prepared pianos and kitchen-table samples meet laptops and old synths. warm, intimate and slightly crooked, from the early-2000s folktronica wave to modern piano-and-electronics. warm organic melodic electronica that sounds handmade. in the early 2000s a loose movement often called folktronica mixed acoustic guitars, music boxes and kitchen-table samples with laptops: four tet&#x27;s pause, susumu yokota, colleen, mum and bibio. the books built songs from found sound, and juana molina looped her voice into hypnotic patterns. later nils frahm, hauschka and kaitlyn aurelia smith brought piano, prepared instruments and modular synths into the same warm, intimate space." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLWovsAILNBgk" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-030.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-030</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLWovsAILNBgk" rel="noopener">Electronica · Folktronica &amp; Handmade</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Electronica that sounds handmade. Acoustic guitars, music boxes, prepared pianos and kitchen-table samples meet laptops and old synths. Warm, intimate and slightly crooked, from the early-2000s folktronica wave to modern piano-and-electronics.</p>
+      <p class="meta"><span>19 tracks</span><span>1 h 36 min</span></p>
+      <ul class="tags"><li>warm</li><li>organic</li><li>melodic</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc030-bg" aria-label="Background for Electronica · Folktronica &amp; Handmade">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc030-bg"><div><p class="bg">Electronica that sounds handmade. In the early 2000s a loose movement often called folktronica mixed acoustic guitars, music boxes and kitchen-table samples with laptops: Four Tet&#x27;s Pause, Susumu Yokota, Colleen, Múm and Bibio. The Books built songs from found sound, and Juana Molina looped her voice into hypnotic patterns. Later Nils Frahm, Hauschka and Kaitlyn Aurelia Smith brought piano, prepared instruments and modular synths into the same warm, intimate space.</p></div></div>
+</li>
+  </ol>
+</section>
+<section class="family pat-6" id="techno">
+  <header class="fam-head" style="--img:url(thumbs/fam-techno.jpg)">
+    <span class="fam-no">06</span>
+    <h2>Techno</h2>
+    <span class="fam-count">11</span>
+    <button class="info" type="button" aria-expanded="false" aria-controls="techno-info">Info</button>
+  </header>
+  <div class="unfold" id="techno-info"><div><p class="fam-info">Techno was born in and around Detroit in the 1980s, when Juan Atkins, Derrick May and Kevin Saunderson fused Kraftwerk, funk and the city&#x27;s futurist imagination into machine music. From there it travelled to Berlin, the UK and everywhere else, splitting into countless forms: stripped-down minimal, melodic and progressive builds, hypnotic and deep, or slow and nocturnal. This family is less about peak-time pressure and more about repetition as a way of listening, where small changes over long stretches carry the whole track.</p></div></div>
+  <ol class="rows">
+<li class="row" data-tags="history|calm" data-search="ambient techno · classics to today ambient techno from the early 90s uk wave to current niche producers. techno structures, atmosphere first. history calm ambient techno appeared in early-90s britain as music for the morning after: techno structures, but listened to rather than danced to. the opening tracks come from that first wave, with aphex twin, the orb, global communication, b12 and the black dog. later the sound was picked up by biosphere in norway and plastikman in canada, and later still by producers like donato dozzy, voices from the lake, barker and skee mask, who keep proving that a kick drum and a wide-open space can coexist." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLG8-kEMKLC8g" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-004.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-004</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLG8-kEMKLC8g" rel="noopener">Ambient Techno · Classics to Today</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Ambient techno from the early 90s UK wave to current niche producers. Techno structures, atmosphere first.</p>
+      <p class="meta"><span>27 tracks</span><span>2 h 56 min</span></p>
+      <ul class="tags"><li>history</li><li>calm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc004-bg" aria-label="Background for Ambient Techno · Classics to Today">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc004-bg"><div><p class="bg">Ambient techno appeared in early-90s Britain as music for the morning after: techno structures, but listened to rather than danced to. The opening tracks come from that first wave, with Aphex Twin, The Orb, Global Communication, B12 and The Black Dog. Later the sound was picked up by Biosphere in Norway and Plastikman in Canada, and later still by producers like Donato Dozzy, Voices From The Lake, Barker and Skee Mask, who keep proving that a kick drum and a wide-open space can coexist.</p></div></div>
+</li>
+<li class="row" data-tags="calm|hypnotic" data-search="slow techno · evening slow techno and its close relatives for the evening. melancholic, deep, a little hazy. not about dub, just about tempo and mood. calm hypnotic slow techno and its relatives, made for the evening rather than the club. moderat, kiasmos and christian loffler bring melancholy and melody, nicolas jaar and darkside stretch tempo and space until the beat almost dissolves, and the giegling circle around kettenkarussell and vril adds a dreamy, slightly blurred depth. the last tracks get hazier and stranger with andy stott, actress and kassem mosse." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLZrS0MyFfc7A" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-008.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-008</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLZrS0MyFfc7A" rel="noopener">Slow Techno · Evening</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Slow techno and its close relatives for the evening. Melancholic, deep, a little hazy. Not about dub, just about tempo and mood.</p>
+      <p class="meta"><span>22 tracks</span><span>2 h 20 min</span></p>
+      <ul class="tags"><li>calm</li><li>hypnotic</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc008-bg" aria-label="Background for Slow Techno · Evening">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc008-bg"><div><p class="bg">Slow techno and its relatives, made for the evening rather than the club. Moderat, Kiasmos and Christian Löffler bring melancholy and melody, Nicolas Jaar and Darkside stretch tempo and space until the beat almost dissolves, and the Giegling circle around Kettenkarussell and Vril adds a dreamy, slightly blurred depth. The last tracks get hazier and stranger with Andy Stott, Actress and Kassem Mosse.</p></div></div>
+</li>
+<li class="row" data-tags="hypnotic|dancefloor" data-search="progressive techno · slow builds techno that grows instead of hitting. long arcs, rising melodies and patient builds, from the 90s roots via the border community era to today&#x27;s melodic and hypnotic side. hypnotic dancefloor techno that grows instead of hitting. the 90s roots come from underworld, orbital and sasha, who brought long arcs and emotional builds to rave music. in the 2000s james holden&#x27;s border community label made it stranger and more psychedelic, with nathan fake and fairmont. today stephan bodzin, mind against and kolsch carry the melodic side, while ben klock, sandwell district and rrose show the darker, more hypnotic version of the same patience." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLHJ8y-Pwn_eY" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-012.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-012</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLHJ8y-Pwn_eY" rel="noopener">Progressive Techno · Slow Builds</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Techno that grows instead of hitting. Long arcs, rising melodies and patient builds, from the 90s roots via the Border Community era to today&#x27;s melodic and hypnotic side.</p>
+      <p class="meta"><span>20 tracks</span><span>2 h 43 min</span></p>
+      <ul class="tags"><li>hypnotic</li><li>dancefloor</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc012-bg" aria-label="Background for Progressive Techno · Slow Builds">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc012-bg"><div><p class="bg">Techno that grows instead of hitting. The 90s roots come from Underworld, Orbital and Sasha, who brought long arcs and emotional builds to rave music. In the 2000s James Holden&#x27;s Border Community label made it stranger and more psychedelic, with Nathan Fake and Fairmont. Today Stephan Bodzin, Mind Against and Kölsch carry the melodic side, while Ben Klock, Sandwell District and Rrose show the darker, more hypnotic version of the same patience.</p></div></div>
+</li>
+<li class="row" data-tags="history|hypnotic|dancefloor" data-search="minimal techno · introduction a walk through minimal techno: detroit reduction, the clicks and cuts of 2000s berlin and cologne, and the romanian school. less is the whole point. history hypnotic dancefloor a short history of minimal techno. in detroit, robert hood and daniel bell stripped techno down to its bones in the early 90s, and robert hood&#x27;s minimal nation (1994) became one of its key references. in the 2000s berlin and cologne turned it into clicks, cuts and long hypnotic grooves, with ricardo villalobos, akufen, isolee and sleeparchive. the final part belongs to the romanian school around petre inspirescu, raresh and rhadoo: long, patient and endlessly detailed." data-added="2026-11-18">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLYrVN3b1di2Q" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-013.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-013</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLYrVN3b1di2Q" rel="noopener">Minimal Techno · Introduction</a><span class="new" hidden>new</span></h3>
+      <p class="desc">A walk through minimal techno: Detroit reduction, the clicks and cuts of 2000s Berlin and Cologne, and the Romanian school. Less is the whole point.</p>
+      <p class="meta"><span>21 tracks</span><span>2 h 37 min</span></p>
+      <ul class="tags"><li>history</li><li>hypnotic</li><li>dancefloor</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc013-bg" aria-label="Background for Minimal Techno · Introduction">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc013-bg"><div><p class="bg">A short history of minimal techno. In Detroit, Robert Hood and Daniel Bell stripped techno down to its bones in the early 90s, and Robert Hood&#x27;s Minimal Nation (1994) became one of its key references. In the 2000s Berlin and Cologne turned it into clicks, cuts and long hypnotic grooves, with Ricardo Villalobos, Akufen, Isolée and Sleeparchive. The final part belongs to the Romanian school around Petre Inspirescu, Raresh and Rhadoo: long, patient and endlessly detailed.</p></div></div>
+</li>
+<li class="row" data-tags="history|dancefloor" data-search="detroit techno · origins the other parent of dub techno. detroit in the 80s and 90s: the belleville three, underground resistance and the second wave turned kraftwerk and funk into a futurist sound. basic channel later fused this with jamaican dub. history dancefloor the other parent of dub techno. in 1980s detroit, the belleville three, juan atkins, derrick may and kevin saunderson, turned kraftwerk, funk and the city&#x27;s industrial decline into futurist machine music. the second wave around underground resistance, carl craig and jeff mills added politics, jazz and science fiction, and drexciya built an entire underwater mythology. basic channel later fused this sound with jamaican dub." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLeVhNXUAUPj0" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-022.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-022</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLeVhNXUAUPj0" rel="noopener">Detroit Techno · Origins</a><span class="new" hidden>new</span></h3>
+      <p class="desc">The other parent of dub techno. Detroit in the 80s and 90s: the Belleville Three, Underground Resistance and the second wave turned Kraftwerk and funk into a futurist sound. Basic Channel later fused this with Jamaican dub.</p>
+      <p class="meta"><span>20 tracks</span><span>2 h 09 min</span></p>
+      <ul class="tags"><li>history</li><li>dancefloor</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc022-bg" aria-label="Background for Detroit Techno · Origins">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc022-bg"><div><p class="bg">The other parent of dub techno. In 1980s Detroit, the Belleville Three, Juan Atkins, Derrick May and Kevin Saunderson, turned Kraftwerk, funk and the city&#x27;s industrial decline into futurist machine music. The second wave around Underground Resistance, Carl Craig and Jeff Mills added politics, jazz and science fiction, and Drexciya built an entire underwater mythology. Basic Channel later fused this sound with Jamaican dub.</p></div></div>
+</li>
+<li class="row" data-tags="hypnotic|deep listening" data-search="techno · hypnotic techno as a slow trance. rolling loops, deep low end and patterns that shift by millimetres, from the italian and spanish schools to the deep end of berlin. made for long rides and late hours alike. hypnotic deep listening hypnotic techno rests on one idea: repeat a pattern long enough and the smallest change starts to feel huge. in italy donato dozzy and neel, together also known as voices from the lake, made it slow, psychedelic and deep. in spain oscar mulero and the polegroup and semantica circles gave it a darker, more mechanical pull. rrose, mike parker and wata igarashi carry the same patience towards drone and texture." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLLGnkXnvQw90" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-035.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-035</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLLGnkXnvQw90" rel="noopener">Techno · Hypnotic</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Techno as a slow trance. Rolling loops, deep low end and patterns that shift by millimetres, from the Italian and Spanish schools to the deep end of Berlin. Made for long rides and late hours alike.</p>
+      <p class="meta"><span>20 tracks</span><span>2 h 12 min</span></p>
+      <ul class="tags"><li>hypnotic</li><li>deep listening</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc035-bg" aria-label="Background for Techno · Hypnotic">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc035-bg"><div><p class="bg">Hypnotic techno rests on one idea: repeat a pattern long enough and the smallest change starts to feel huge. In Italy Donato Dozzy and Neel, together also known as Voices From The Lake, made it slow, psychedelic and deep. In Spain Oscar Mulero and the Polegroup and Semantica circles gave it a darker, more mechanical pull. Rrose, Mike Parker and Wata Igarashi carry the same patience towards drone and texture.</p></div></div>
+</li>
+<li class="row" data-tags="dark|rhythm" data-search="techno · raw &amp; mechanical techno stripped to the machine. monotone loops, hard edges, metallic percussion and almost nothing else, from detroit&#x27;s minimal fury to berlin&#x27;s monotonal school and the british industrial side. tough, but never schranz. dark rhythm techno reduced to the machine. in early-90s detroit, jeff mills and robert hood showed how much tension a single loop can hold. in birmingham, surgeon and regis built a harder, more industrial version, and in berlin sleeparchive pressed monotone techno onto almost anonymous records. ancient methods, silent servant and lucy&#x27;s stroboscopic artefacts label carry that severity into the present without tipping into schranz." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLEjU5VIP5eLg" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-036.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-036</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLEjU5VIP5eLg" rel="noopener">Techno · Raw &amp; Mechanical</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Techno stripped to the machine. Monotone loops, hard edges, metallic percussion and almost nothing else, from Detroit&#x27;s minimal fury to Berlin&#x27;s monotonal school and the British industrial side. Tough, but never Schranz.</p>
+      <p class="meta"><span>17 tracks</span><span>1 h 43 min</span></p>
+      <ul class="tags"><li>dark</li><li>rhythm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc036-bg" aria-label="Background for Techno · Raw &amp; Mechanical">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc036-bg"><div><p class="bg">Techno reduced to the machine. In early-90s Detroit, Jeff Mills and Robert Hood showed how much tension a single loop can hold. In Birmingham, Surgeon and Regis built a harder, more industrial version, and in Berlin Sleeparchive pressed monotone techno onto almost anonymous records. Ancient Methods, Silent Servant and Lucy&#x27;s Stroboscopic Artefacts label carry that severity into the present without tipping into Schranz.</p></div></div>
+</li>
+<li class="row" data-tags="melodic|hypnotic" data-search="progressive techno · today progressive techno in the present tense. melodies that unfold over minutes, arpeggios that climb and synths with real sound design behind them. the modern follow-up to slow builds, morning-ride energy included. melodic hypnotic progressive techno as it sounds today: long melodic arcs built on arpeggios and careful sound design. stephan bodzin plays his arpeggios live on analogue and modular synthesizers, weval and applescal come from the dutch scene, and nathan fake keeps the border community spirit alive. the later tracks lean towards progressive house, with guy j, yotto and ben bohmer stretching a single build over many minutes." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLOqjIf-8kvdc" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-037.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-037</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLOqjIf-8kvdc" rel="noopener">Progressive Techno · Today</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Progressive techno in the present tense. Melodies that unfold over minutes, arpeggios that climb and synths with real sound design behind them. The modern follow-up to Slow Builds, morning-ride energy included.</p>
+      <p class="meta"><span>17 tracks</span><span>1 h 45 min</span></p>
+      <ul class="tags"><li>melodic</li><li>hypnotic</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc037-bg" aria-label="Background for Progressive Techno · Today">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc037-bg"><div><p class="bg">Progressive techno as it sounds today: long melodic arcs built on arpeggios and careful sound design. Stephan Bodzin plays his arpeggios live on analogue and modular synthesizers, Weval and Applescal come from the Dutch scene, and Nathan Fake keeps the Border Community spirit alive. The later tracks lean towards progressive house, with Guy J, Yotto and Ben Böhmer stretching a single build over many minutes.</p></div></div>
+</li>
+<li class="row" data-tags="history|rhythm|cold" data-search="electro · machines that funk electro, the funk of the machine age. robotic breaks, vocoders and cold synth basslines, from early hip-hop and drexciya&#x27;s underwater myth to gerald donald&#x27;s cyber science and today&#x27;s dark electro revival. history rhythm cold electro began in 1982, when afrika bambaataa&#x27;s planet rock set kraftwerk&#x27;s machine pulse to hip-hop breaks. in 90s detroit, drexciya turned it into the myth of an underwater nation, and gerald donald continued the science fiction with dopplereffekt and arpanet. europe answered with anthony rother and legowelt, and today dj stingray, helena hauff and objekt keep the sound cold, fast and alive." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLJeZL9YbvHPo" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-038.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-038</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLJeZL9YbvHPo" rel="noopener">Electro · Machines That Funk</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Electro, the funk of the machine age. Robotic breaks, vocoders and cold synth basslines, from early hip-hop and Drexciya&#x27;s underwater myth to Gerald Donald&#x27;s cyber science and today&#x27;s dark electro revival.</p>
+      <p class="meta"><span>15 tracks</span><span>1 h 19 min</span></p>
+      <ul class="tags"><li>history</li><li>rhythm</li><li>cold</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc038-bg" aria-label="Background for Electro · Machines That Funk">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc038-bg"><div><p class="bg">Electro began in 1982, when Afrika Bambaataa&#x27;s Planet Rock set Kraftwerk&#x27;s machine pulse to hip-hop breaks. In 90s Detroit, Drexciya turned it into the myth of an underwater nation, and Gerald Donald continued the science fiction with Dopplereffekt and Arpanet. Europe answered with Anthony Rother and Legowelt, and today DJ Stingray, Helena Hauff and Objekt keep the sound cold, fast and alive.</p></div></div>
+</li>
+<li class="row" data-tags="rhythm|experimental" data-search="uk leftfield · bass meets techno where uk bass culture walked into techno and stayed curious. bristol and london producers who bend rhythm, sound design and sub pressure into something that is neither dubstep nor straight techno. rhythm experimental around 2010 a group of uk producers left dubstep behind without leaving bass culture. joy orbison&#x27;s hyph mngo (2009) became a turning point, and hessle audio, run by pearson sound, ben ufo and pangaea, gave the in-between sound a home. in bristol, peverelist&#x27;s livity sound and batu&#x27;s timedance kept rhythm and sub pressure at the centre, while call super, objekt and beatrice dillon treat sound design as composition." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLP3RIr-C8HQU" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-039.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-039</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLP3RIr-C8HQU" rel="noopener">UK Leftfield · Bass Meets Techno</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Where UK bass culture walked into techno and stayed curious. Bristol and London producers who bend rhythm, sound design and sub pressure into something that is neither dubstep nor straight techno.</p>
+      <p class="meta"><span>13 tracks</span><span>1 h 08 min</span></p>
+      <ul class="tags"><li>rhythm</li><li>experimental</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc039-bg" aria-label="Background for UK Leftfield · Bass Meets Techno">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc039-bg"><div><p class="bg">Around 2010 a group of UK producers left dubstep behind without leaving bass culture. Joy Orbison&#x27;s Hyph Mngo (2009) became a turning point, and Hessle Audio, run by Pearson Sound, Ben UFO and Pangaea, gave the in-between sound a home. In Bristol, Peverelist&#x27;s Livity Sound and Batu&#x27;s Timedance kept rhythm and sub pressure at the centre, while Call Super, Objekt and Beatrice Dillon treat sound design as composition.</p></div></div>
+</li>
+<li class="row" data-tags="history|dark|dancefloor" data-search="techno · berlin style the sound of the city after the wall. from the tresor years to the berghain era: steel-grey, functional, deep and relentless, but with more nuance than its reputation. ostgut ton at the centre, a few neighbours around it. history dark dancefloor the berlin sound grew out of the reunified city&#x27;s empty spaces. tresor opened in 1991 in the vault of a former department store, and in the 2000s berghain and its label ostgut ton defined a functional, steel-grey techno with marcel dettmann, ben klock and len faki. the later tracks show the deeper side of the same circle, with steffi, fiedel, answer code request and etapp kyle." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLbnFTAOJONRw" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-040.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-040</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLbnFTAOJONRw" rel="noopener">Techno · Berlin Style</a><span class="new" hidden>new</span></h3>
+      <p class="desc">The sound of the city after the Wall. From the Tresor years to the Berghain era: steel-grey, functional, deep and relentless, but with more nuance than its reputation. Ostgut Ton at the centre, a few neighbours around it.</p>
+      <p class="meta"><span>16 tracks</span><span>1 h 46 min</span></p>
+      <ul class="tags"><li>history</li><li>dark</li><li>dancefloor</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc040-bg" aria-label="Background for Techno · Berlin Style">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc040-bg"><div><p class="bg">The Berlin sound grew out of the reunified city&#x27;s empty spaces. Tresor opened in 1991 in the vault of a former department store, and in the 2000s Berghain and its label Ostgut Ton defined a functional, steel-grey techno with Marcel Dettmann, Ben Klock and Len Faki. The later tracks show the deeper side of the same circle, with Steffi, Fiedel, Answer Code Request and Etapp Kyle.</p></div></div>
+</li>
+  </ol>
+</section>
+<section class="family pat-7" id="drum-bass">
+  <header class="fam-head" style="--img:url(thumbs/fam-dnb.jpg)">
+    <span class="fam-no">07</span>
+    <h2>Drum &amp; Bass</h2>
+    <span class="fam-count">4</span>
+    <button class="info" type="button" aria-expanded="false" aria-controls="drum-bass-info">Info</button>
+  </header>
+  <div class="unfold" id="drum-bass-info"><div><p class="fam-info">Drum &amp; bass grew out of the UK rave scene in the early 1990s, when producers sped up and cut apart breakbeats and placed them over heavy sub-bass inherited from reggae sound system culture. Jungle came first, rough and rooted in dub and ragga; drum &amp; bass refined it into many directions, from liquid and atmospheric to dark, technical and neurofunk. At its best it holds two tempos at once: frantic drums on top, slow and deep bass underneath.</p></div></div>
+  <ol class="rows">
+<li class="row" data-tags="history|calm|rhythm" data-search="dnb · atmospheric origins when jungle learned to breathe. the mid-90s, when good looking, metalheadz and a few london studios laid pads, jazz chords and rain over breakbeats and invented drum &amp; bass for listening. history calm rhythm when jungle learned to breathe. the playlist starts in the hardcore years with omni trio, blame and nookie, then moves to the mid 90s, when ltj bukem&#x27;s good looking label and its logical progression compilations laid pads, jazz chords and sampled rain over rolling breakbeats, with pfm, peshay, big bud and blu mar ten close by. goldie&#x27;s metalheadz circle answered with a darker, more precise sound, heard here in j majik, photek and source direct." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLah3du8IWVwo" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-031.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-031</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLah3du8IWVwo" rel="noopener">DnB · Atmospheric Origins</a><span class="new" hidden>new</span></h3>
+      <p class="desc">When jungle learned to breathe. The mid-90s, when Good Looking, Metalheadz and a few London studios laid pads, jazz chords and rain over breakbeats and invented drum &amp; bass for listening.</p>
+      <p class="meta"><span>21 tracks</span><span>2 h 30 min</span></p>
+      <ul class="tags"><li>history</li><li>calm</li><li>rhythm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc031-bg" aria-label="Background for DnB · Atmospheric Origins">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc031-bg"><div><p class="bg">When jungle learned to breathe. The playlist starts in the hardcore years with Omni Trio, Blame and Nookie, then moves to the mid 90s, when LTJ Bukem&#x27;s Good Looking label and its Logical Progression compilations laid pads, jazz chords and sampled rain over rolling breakbeats, with PFM, Peshay, Big Bud and Blu Mar Ten close by. Goldie&#x27;s Metalheadz circle answered with a darker, more precise sound, heard here in J Majik, Photek and Source Direct.</p></div></div>
+</li>
+<li class="row" data-tags="melodic|warm" data-search="dnb · liquid drum &amp; bass with a heart. soul chords, warm basslines and rolling breaks, from hospital and soul:r in the 2000s to today&#x27;s melodic producers. fast tempo, calm mind. melodic warm liquid funk grew out of the atmospheric sound and took shape around 2000 on labels like hospital, run by london elektricity&#x27;s tony colman, and marcus intalex&#x27;s soul:r. high contrast, calibre, logistics and dbridge set the template: soul and jazz chords, warm basslines and rolling breaks at full speed. the 2010s added polish with netsky, etherwood and lenzman, and the last section shows where the melodic side stands today, closing with calibre." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLMCJa8KWuDCg" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-032.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-032</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLMCJa8KWuDCg" rel="noopener">DnB · Liquid</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Drum &amp; bass with a heart. Soul chords, warm basslines and rolling breaks, from Hospital and Soul:r in the 2000s to today&#x27;s melodic producers. Fast tempo, calm mind.</p>
+      <p class="meta"><span>20 tracks</span><span>1 h 53 min</span></p>
+      <ul class="tags"><li>melodic</li><li>warm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc032-bg" aria-label="Background for DnB · Liquid">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc032-bg"><div><p class="bg">Liquid funk grew out of the atmospheric sound and took shape around 2000 on labels like Hospital, run by London Elektricity&#x27;s Tony Colman, and Marcus Intalex&#x27;s Soul:r. High Contrast, Calibre, Logistics and dBridge set the template: soul and jazz chords, warm basslines and rolling breaks at full speed. The 2010s added polish with Netsky, Etherwood and Lenzman, and the last section shows where the melodic side stands today, closing with Calibre.</p></div></div>
+</li>
+<li class="row" data-tags="experimental|rhythm|dark" data-search="dnb · halftime &amp; experimental drum &amp; bass taken apart. half-speed grooves, broken jungle, sub pressure and lots of space, from the autonomic years to producers who use 170 bpm as a starting point rather than a rule. experimental rhythm dark around 2010 dbridge and instra:mental ran autonomic in london, a podcast and club night that stripped drum &amp; bass down to sparse, half-speed grooves at the usual tempo. producers like om unit, ena, overlook, halogenix and ivy lab followed with halftime rhythms, sub pressure and a lot of empty space. the final section looks back at jungle itself: lee gamble&#x27;s diversions 1994-1996 turns old jungle mixtapes into drumless fragments, while fracture and djrum rework breakbeats with a collector&#x27;s ear." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLfPoozgrEyrY" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-033.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-033</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLfPoozgrEyrY" rel="noopener">DnB · Halftime &amp; Experimental</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Drum &amp; bass taken apart. Half-speed grooves, broken jungle, sub pressure and lots of space, from the Autonomic years to producers who use 170 BPM as a starting point rather than a rule.</p>
+      <p class="meta"><span>14 tracks</span><span>1 h 05 min</span></p>
+      <ul class="tags"><li>experimental</li><li>rhythm</li><li>dark</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc033-bg" aria-label="Background for DnB · Halftime &amp; Experimental">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc033-bg"><div><p class="bg">Around 2010 dBridge and Instra:mental ran Autonomic in London, a podcast and club night that stripped drum &amp; bass down to sparse, half-speed grooves at the usual tempo. Producers like Om Unit, Ena, Overlook, Halogenix and Ivy Lab followed with halftime rhythms, sub pressure and a lot of empty space. The final section looks back at jungle itself: Lee Gamble&#x27;s Diversions 1994-1996 turns old jungle mixtapes into drumless fragments, while Fracture and Djrum rework breakbeats with a collector&#x27;s ear.</p></div></div>
+</li>
+<li class="row" data-tags="history|rhythm|warm" data-search="dnb · jazzstep where drum &amp; bass met the jazz record collection. double bass, rhodes, brushes and live players over breakbeats, from bristol&#x27;s reprazent and 4hero&#x27;s reinforced studio to the broken-beat soul that followed. history rhythm warm in the mid 90s drum &amp; bass discovered the jazz record collection. alex reece&#x27;s pulp fiction and adam f&#x27;s circles set the template, and photek added a cooler, more abstract shade. in bristol, roni size and krust led the reprazent collective, whose new forms won the mercury prize in 1997 with live double bass and drums. in london, 4hero ran reinforced records and moved towards orchestral soul on two pages (1998), pointing to the broken-beat scene that followed." data-added="2026-11-21">
+  <div class="row-head">
+    <a class="thumb" href="https://music.youtube.com/playlist?list=PLZDPN0WIV1wI" rel="noopener" tabindex="-1" aria-hidden="true"><img src="thumbs/VC-034.jpg" width="168" height="168" alt="" loading="lazy" decoding="async"></a>
+    <div class="row-main">
+      <span class="catno">VC-034</span>
+      <h3 class="title"><a href="https://music.youtube.com/playlist?list=PLZDPN0WIV1wI" rel="noopener">DnB · Jazzstep</a><span class="new" hidden>new</span></h3>
+      <p class="desc">Where drum &amp; bass met the jazz record collection. Double bass, Rhodes, brushes and live players over breakbeats, from Bristol&#x27;s Reprazent and 4hero&#x27;s Reinforced studio to the broken-beat soul that followed.</p>
+      <p class="meta"><span>13 tracks</span><span>1 h 21 min</span></p>
+      <ul class="tags"><li>history</li><li>rhythm</li><li>warm</li></ul>
+    </div>
+    <button class="fold" type="button" aria-expanded="false" aria-controls="vc034-bg" aria-label="Background for DnB · Jazzstep">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+    </button>
+  </div>
+  <div class="unfold" id="vc034-bg"><div><p class="bg">In the mid 90s drum &amp; bass discovered the jazz record collection. Alex Reece&#x27;s Pulp Fiction and Adam F&#x27;s Circles set the template, and Photek added a cooler, more abstract shade. In Bristol, Roni Size and Krust led the Reprazent collective, whose New Forms won the Mercury Prize in 1997 with live double bass and drums. In London, 4hero ran Reinforced Records and moved towards orchestral soul on Two Pages (1998), pointing to the broken-beat scene that followed.</p></div></div>
+</li>
+  </ol>
+</section>
+    <p class="empty" id="empty" hidden>Nothing in the catalogue matches. Try fewer tags or another word.</p>
+  </main>
+
+  <footer><span>Compiled by Voidceptions</span><span>Opens in YouTube Music</span></footer>
+</div>
+<button class="top" id="top" type="button" aria-label="Back to top">
+  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 10l5-5 5 5"/></svg>
+</button>
+<script>
+(() => {
+  // installable as an app (Android "Install app"), and readable offline
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+  const NEW_DAYS = 14;
+  const rows = [...document.querySelectorAll(".row")];
+  const families = [...document.querySelectorAll(".family")];
+  const chips = [...document.querySelectorAll(".chip")];
+  const q = document.getElementById("q");
+  const count = document.getElementById("count");
+  const reset = document.getElementById("reset");
+  const empty = document.getElementById("empty");
+  const active = new Set();
+  const fold = s => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+  // "new" is relative to the day the page is viewed, not the day it was built
+  const now = Date.now();
+  rows.forEach(r => {
+    const added = Date.parse(r.dataset.added + "T00:00:00");
+    if (now - added < NEW_DAYS * 864e5) r.querySelector(".new").hidden = false;
+  });
+
+  // unfold toggles: chevrons (background) and family "Info" links
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".fold, .info");
+    if (!btn) return;
+    const panel = document.getElementById(btn.getAttribute("aria-controls"));
+    const open = btn.getAttribute("aria-expanded") !== "true";
+    btn.setAttribute("aria-expanded", open);
+    panel.classList.toggle("open", open);
+  });
+
+  function apply() {
+    const words = fold(q.value).split(/\s+/).filter(Boolean);
+    let shown = 0;
+    rows.forEach(r => {
+      const tags = r.dataset.tags.split("|");
+      const okTags = !active.size || tags.some(t => active.has(t));
+      const okText = words.every(w => r.dataset.search.includes(w));
+      r.hidden = !(okTags && okText);
+      if (!r.hidden) shown++;
+    });
+    families.forEach(f => { f.hidden = !f.querySelector(".row:not([hidden])"); });
+    count.textContent = shown + " of " + rows.length;
+    empty.hidden = shown > 0;
+    reset.hidden = !(active.size || q.value);
+  }
+
+  chips.forEach(c => c.addEventListener("click", () => {
+    const on = c.getAttribute("aria-pressed") !== "true";
+    c.setAttribute("aria-pressed", on);
+    on ? active.add(c.dataset.tag) : active.delete(c.dataset.tag);
+    apply();
+  }));
+  q.addEventListener("input", apply);
+  reset.addEventListener("click", () => {
+    active.clear(); q.value = "";
+    chips.forEach(c => c.setAttribute("aria-pressed", "false"));
+    apply();
+  });
+  const top = document.getElementById("top");
+  const onScroll = () => top.classList.toggle("show", scrollY > 600);
+  addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+  top.addEventListener("click", () => scrollTo({ top: 0 }));  // smooth via html { scroll-behavior }
+
+  document.getElementById("random").addEventListener("click", () => {
+    const pool = rows.filter(r => !r.hidden);
+    if (!pool.length) return;
+    location.href = pool[Math.floor(Math.random() * pool.length)].querySelector(".title a").href;
+  });
+})();
+</script>
+</body>
+</html>

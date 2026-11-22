@@ -16,9 +16,8 @@
   --accent: #e1602d;
   /* banner fades: page colour on the text side, image showing through on the right */
   --fade-x: linear-gradient(90deg, rgba(18,17,16,1) 30%, rgba(18,17,16,.62) 62%, rgba(18,17,16,.22));
-  /* geometric lines behind the playlist blocks (a shade lighter than the page), playlist dividers above them */
+  /* geometric lines behind the playlist blocks (a shade lighter than the page) */
   --line: #262019;
-  --divider: #3a352d;
   --serif: "Iowan Old Style", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
 }
@@ -116,7 +115,6 @@ a.card-in:hover .name { color: var(--accent); }
 
 /* rows */
 .rows { list-style: none; margin: 0; padding: 0; }
-.row { border-bottom: 1px solid var(--divider); }
 .row-head { display: grid; grid-template-columns: 84px 1fr 44px; gap: 0 16px; padding: 18px 0 14px; }
 .thumb { display: block; width: 100%; aspect-ratio: 1; align-self: start; margin-top: 4px;
   background: var(--rule); outline: 1px solid rgba(232, 226, 212, .08); outline-offset: -1px; }
@@ -165,7 +163,7 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
   .masthead p { max-width: 40rem; }
   nav ol { gap: 10px 16px; }
   .card-in { min-height: 72px; font-size: 18px; }
-  /* cells of one grid row stretch to the same height, so the dividers line up */
+  /* cells of one grid row stretch to the same height, so the rows line up */
   .rows { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
   .fam-head { padding-top: 60px; }
   .fam-head h2 { font-size: 30px; }

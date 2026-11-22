@@ -5,4 +5,5 @@ genre family. Each title or cover opens the playlist in YouTube Music.
 
 **Live:** https://guidokl.github.io/ytm/
 
-A static page with small cover thumbnails: no tracking, no cookies, no backend.
+A static page with small cover thumbnails: no tracking, no cookies, no backend. It can be installed as an app
+(Chrome on Android: menu, then "Install app") and stays readable offline.

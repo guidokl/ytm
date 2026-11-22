@@ -6,6 +6,10 @@
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#121110">
 <title>Voidceptions · Playlist Catalogue</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <style>
 :root {
   --ink: #121110;
@@ -967,6 +971,9 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 </button>
 <script>
 (() => {
+  // installable as an app (Android "Install app"), and readable offline
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
   const NEW_DAYS = 14;
   const rows = [...document.querySelectorAll(".row")];
   const families = [...document.querySelectorAll(".family")];

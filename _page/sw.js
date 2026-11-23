@@ -1,4 +1,4 @@
-const CACHE = "vc-f12f2a6278";
+const CACHE = "vc-d1a737fec9";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil((async () => {

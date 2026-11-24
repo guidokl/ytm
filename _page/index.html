@@ -1984,7 +1984,10 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
 
   // Android: plain https links from the installed app (and from in-app browsers) open in a Custom Tab instead of
   // the YouTube Music app. An intent link names the app's package; without the app Chrome opens the fallback URL.
-  if (/Android/i.test(navigator.userAgent)) {
+  // Not in Brave's installed app: it hands every outside link to a Custom Tab, which refuses intent:// on its
+  // first load (ERR_UNKNOWN_URL_SCHEME, Guido 2026-11-24), so plain links are the better failure there.
+  const braveApp = !!navigator.brave && matchMedia("(display-mode: standalone)").matches;
+  if (/Android/i.test(navigator.userAgent) && !braveApp) {
     document.querySelectorAll('a[href^="https://music.youtube.com/"]').forEach(a => {
       const url = a.href;
       a.href = "intent://" + url.slice("https://".length) +

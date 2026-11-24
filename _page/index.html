@@ -1982,6 +1982,17 @@ footer { margin: 48px 0 0; padding: 18px 0 48px; border-top: 1px solid var(--pap
   // installable as an app (Android "Install app"), and readable offline
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
+  // Android: plain https links from the installed app (and from in-app browsers) open in a Custom Tab instead of
+  // the YouTube Music app. An intent link names the app's package; without the app Chrome opens the fallback URL.
+  if (/Android/i.test(navigator.userAgent)) {
+    document.querySelectorAll('a[href^="https://music.youtube.com/"]').forEach(a => {
+      const url = a.href;
+      a.href = "intent://" + url.slice("https://".length) +
+        "#Intent;scheme=https;package=com.google.android.apps.youtube.music;" +
+        "S.browser_fallback_url=" + encodeURIComponent(url) + ";end";
+    });
+  }
+
   const NEW_DAYS = 14;
   const rows = [...document.querySelectorAll(".row")];
   const families = [...document.querySelectorAll(".family")];
